@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Loog Buddy</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Loog Buddy">
+<meta name="theme-color" content="#FFF8EC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+</head>
+<body>
+<style>
+  :root{
+    --paper:#FFF8EC; --ink:#33302E; --soft:#8A8377;
+    --em:#3EC98B; --c:#FFB528; --g:#4FA8F6; --coral:#FF6B5E;
+    --card:#FFFFFF; --shadow:0 6px 0 rgba(51,48,46,.12);
+    --display:"Arial Rounded MT Bold","Hiragino Maru Gothic ProN",-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
+  html,body{height:100%;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,system-ui,sans-serif;
+    display:flex; flex-direction:column; overflow:hidden; touch-action:manipulation;}
+  header{padding:14px 20px 6px; display:flex; align-items:center; gap:10px;}
+  header h1{font-family:var(--display); font-size:1.5rem; margin:0; letter-spacing:.5px;}
+  header .dot{width:14px;height:14px;border-radius:50%;}
+  main{flex:1; overflow:hidden; position:relative;}
+  .screen{position:absolute; inset:0; padding:8px 16px 16px; display:none; flex-direction:column;}
+  .screen.active{display:flex;}
+
+  /* ---------- tabs ---------- */
+  nav{display:flex; gap:12px; padding:10px 16px calc(14px + env(safe-area-inset-bottom)); background:#fff;
+    border-top:3px solid rgba(51,48,46,.08);}
+  nav button{flex:1; font-family:var(--display); font-size:1.25rem; padding:14px; border:none; border-radius:20px;
+    background:var(--paper); color:var(--soft); cursor:pointer;}
+  nav button.on{background:var(--ink); color:#fff;}
+  nav button:focus-visible{outline:3px solid var(--g); outline-offset:2px;}
+
+  /* ---------- chords screen ---------- */
+  .chord-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:12px;}
+  .chord-card{border:none; border-radius:24px; background:var(--card); box-shadow:var(--shadow);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer;
+    padding:16px 8px; transition:transform .08s;}
+  .chord-card:active{transform:scale(.96);}
+  .chord-card .big{font-family:var(--display); font-size:clamp(2.6rem,9vw,4.5rem); line-height:1;}
+  .chord-card .hint{font-family:var(--display); font-size:.85rem; color:#fff; padding:5px 12px; border-radius:999px; white-space:nowrap;}
+  .chord-card.playing{animation:wiggle .4s;}
+  @keyframes wiggle{25%{transform:rotate(-2deg) scale(1.03);}75%{transform:rotate(2deg) scale(1.03);}}
+
+  .diagram-wrap{flex:1; min-height:0; margin-top:14px; background:var(--card); border-radius:28px; box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; gap:20px; padding:12px;}
+  .diagram-wrap svg{height:100%; max-width:52%;}
+  .diagram-side{display:flex; flex-direction:column; align-items:center; gap:10px;}
+  .diagram-side .name{font-family:var(--display); font-size:2.6rem;}
+  .strum-btn{font-family:var(--display); font-size:1.5rem; color:#fff; background:var(--coral); border:none;
+    border-radius:999px; padding:16px 34px; cursor:pointer; box-shadow:0 5px 0 #d94f44;}
+  .strum-btn:active{transform:translateY(3px); box-shadow:0 2px 0 #d94f44;}
+
+  /* ---------- songs screen ---------- */
+  .song-list{flex:1; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;
+    align-content:start; overflow-y:auto; padding-bottom:8px;}
+  .song-btn{border:none; border-radius:24px; background:var(--card); box-shadow:var(--shadow); padding:16px 20px;
+    display:flex; align-items:center; gap:16px; cursor:pointer; text-align:left;}
+  .song-btn:active{transform:scale(.98);}
+  .song-btn .emoji{font-size:2.4rem;}
+  .song-btn .t{font-family:var(--display); font-size:1.5rem;}
+  .song-btn .s{color:var(--soft); font-size:.95rem; margin-top:2px;}
+
+  /* ---------- play-along ---------- */
+  #play{align-items:center; justify-content:center; gap:8px;}
+  #play .lyric{font-family:var(--display); font-size:clamp(1.4rem,4.5vw,2.2rem); min-height:2.6rem; text-align:center; text-wrap:balance;}
+  #bubble{width:min(46vw,300px); height:min(46vw,300px); border-radius:50%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; color:#fff; transition:background .2s;}
+  #bubble .letter{font-family:var(--display); font-size:clamp(4rem,18vw,8rem); line-height:1;}
+  #bubble .strum{font-family:var(--display); font-size:1.3rem; opacity:0; letter-spacing:2px;}
+  #bubble.beat{animation:bounce .28s;}
+  #bubble.beat .strum{opacity:1;}
+  @keyframes bounce{40%{transform:scale(1.12);}}
+  #next-chord{font-family:var(--display); font-size:1.15rem; color:var(--soft); min-height:1.5rem;}
+  #count{font-family:var(--display); font-size:5rem; min-height:0;}
+  .play-ctl{display:flex; gap:12px; margin-top:6px;}
+  .play-ctl button{font-family:var(--display); font-size:1.2rem; border:none; border-radius:999px; padding:14px 28px; cursor:pointer;}
+  #stop-btn{background:var(--paper); color:var(--ink); border:3px solid rgba(51,48,46,.15);}
+  #cheer{position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--paper); z-index:5; gap:10px;}
+  #cheer.show{display:flex;}
+  #cheer .stars{font-size:4.5rem; animation:pop .5s;}
+  #cheer h2{font-family:var(--display); font-size:2.4rem; margin:0;}
+  @keyframes pop{0%{transform:scale(.3);}70%{transform:scale(1.2);}}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important;}}
+</style>
+
+<header>
+  <span class="dot" style="background:var(--em)"></span>
+  <span class="dot" style="background:var(--c)"></span>
+  <span class="dot" style="background:var(--g)"></span>
+  <h1>Loog Buddy</h1>
+</header>
+
+<main>
+  <!-- CHORDS -->
+  <section class="screen active" id="chords">
+    <div class="chord-row" id="chord-row"></div>
+    <div class="diagram-wrap">
+      <svg id="fretboard" viewBox="0 0 220 300" aria-label="chord diagram"></svg>
+      <div class="diagram-side">
+        <div class="name" id="diag-name">Em</div>
+        <button class="strum-btn" id="strum-again">🎸 Strum!</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SONG LIST -->
+  <section class="screen" id="songs">
+    <div class="song-list" id="song-list"></div>
+  </section>
+
+  <!-- PLAY-ALONG -->
+  <section class="screen" id="play">
+    <div id="count"></div>
+    <div class="lyric" id="lyric"></div>
+    <div id="bubble"><span class="letter" id="bubble-letter"></span><span class="strum">STRUM!</span></div>
+    <div id="next-chord"></div>
+    <div class="play-ctl"><button id="stop-btn">⏹ Stop</button></div>
+    <div id="cheer"><div class="stars">⭐️⭐️⭐️</div><h2 id="cheer-msg">You did it!</h2>
+      <button class="strum-btn" id="cheer-done">Yay!</button></div>
+  </section>
+</main>
+
+<nav>
+  <button id="tab-chords" class="on">🎨 Chords</button>
+  <button id="tab-songs">🎵 Songs</button>
+</nav>
+
+<script>
+/* ---------- Loog chord data: strings low→high G3 B3 E4, frets ---------- */
+const CHORDS = {
+  Em:{frets:[0,0,0], fingers:[0,0,0], color:'#3EC98B', hint:'no fingers!'},
+  C: {frets:[0,1,0], fingers:[0,1,0], color:'#FFB528', hint:'1 finger'},
+  G: {frets:[0,0,3], fingers:[0,0,3], color:'#4FA8F6', hint:'1 finger'},
+  Am:{frets:[2,1,0], fingers:[2,1,0], color:'#F1568C', hint:'2 fingers'},
+  D: {frets:[2,3,2], fingers:[1,3,2], color:'#9B6DE0', hint:'3 fingers — super chord!'},
+};
+const OPEN_FREQ = [196.00, 246.94, 329.63]; // G3 B3 E4
+
+/* ---------- audio: plucked-string synth ---------- */
+let ctx;
+function audio(){ if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)(); if(ctx.state==='suspended') ctx.resume(); return ctx; }
+function pluck(freq, when, vol=0.5){
+  const ac=audio(), o=ac.createOscillator(), o2=ac.createOscillator(), g=ac.createGain(), f=ac.createBiquadFilter();
+  o.type='triangle'; o.frequency.value=freq;
+  o2.type='sine'; o2.frequency.value=freq*2; // a little shimmer
+  f.type='lowpass'; f.frequency.setValueAtTime(freq*6,when); f.frequency.exponentialRampToValueAtTime(freq*1.5,when+1.2);
+  g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(vol,when+0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001,when+1.6);
+  o.connect(f); o2.connect(f); f.connect(g); g.connect(ac.destination);
+  o.start(when); o2.start(when); o.stop(when+1.7); o2.stop(when+1.7);
+}
+function strum(name, when){
+  const ac=audio(); when = when ?? ac.currentTime;
+  CHORDS[name].frets.forEach((fr,i)=> pluck(OPEN_FREQ[i]*Math.pow(2,fr/12), when + i*0.06, 0.42));
+}
+
+/* ---------- fretboard diagram ---------- */
+function drawChord(name){
+  const {frets,fingers,color}=CHORDS[name];
+  const L=40,R=180,T=40,B=270,rows=4,cols=3, sw=(R-L)/(cols-1), rh=(B-T)/rows;
+  let s=`<rect x="${L-14}" y="${T-6}" width="${R-L+28}" height="${B-T+12}" rx="14" fill="#F6EEDD"/>`;
+  s+=`<rect x="${L-10}" y="${T-8}" width="${R-L+20}" height="10" rx="4" fill="#33302E"/>`;
+  for(let r=1;r<=rows;r++) s+=`<line x1="${L-10}" y1="${T+r*rh}" x2="${R+10}" y2="${T+r*rh}" stroke="#CBBFA6" stroke-width="3"/>`;
+  for(let c=0;c<cols;c++)  s+=`<line x1="${L+c*sw}" y1="${T}" x2="${L+c*sw}" y2="${B}" stroke="#8A8377" stroke-width="${4-c}"/>`;
+  frets.forEach((fr,i)=>{
+    const x=L+i*sw;
+    if(fr===0) s+=`<circle cx="${x}" cy="${T-22}" r="10" fill="none" stroke="${color}" stroke-width="4"/>`;
+    else s+=`<circle cx="${x}" cy="${T+(fr-0.5)*rh}" r="16" fill="${color}"/>
+             <text x="${x}" y="${T+(fr-0.5)*rh+6}" text-anchor="middle" font-size="17" font-weight="bold" fill="#fff">${fingers[i]}</text>`;
+  });
+  ['G','B','E'].forEach((n,i)=> s+=`<text x="${L+i*sw}" y="${B+24}" text-anchor="middle" font-size="15" fill="#8A8377" font-weight="bold">${n}</text>`);
+  document.getElementById('fretboard').innerHTML=s;
+  document.getElementById('diag-name').textContent=name;
+  document.getElementById('diag-name').style.color=color;
+}
+let currentChord='Em';
+const chordRow=document.getElementById('chord-row');
+Object.entries(CHORDS).forEach(([name,ch])=>{
+  const b=document.createElement('button'); b.className='chord-card';
+  b.innerHTML=`<span class="big" style="color:${ch.color}">${name}</span><span class="hint" style="background:${ch.color}">${ch.hint}</span>`;
+  b.addEventListener('click',()=>{
+    currentChord=name; drawChord(name); strum(name);
+    b.classList.remove('playing'); void b.offsetWidth; b.classList.add('playing');
+  });
+  chordRow.appendChild(b);
+});
+drawChord('Em');
+document.getElementById('strum-again').addEventListener('click',()=>strum(currentChord));
+
+/* ---------- songs: events of [chord, beats, lyric] — real songbook harmony, key of G ---------- */
+const SONGS=[
+ {title:'Row Your Boat', emoji:'🚣', sub:'All G — one chord, easy start!', bpm:84,
+  events:[['G',4,'Row, row, row your boat'],['G',4,'gently down the stream'],
+          ['G',4,'Merrily, merrily, merrily, merrily'],['G',4,'life is but a dream!']]},
+ {title:'Twinkle Twinkle', emoji:'⭐️', sub:'G, C and D — three colors!', bpm:76,
+  events:[['G',2,'Twinkle,'],['G',2,'twinkle'],['C',2,'little'],['G',2,'star,'],
+          ['C',2,'how I'],['G',2,'wonder'],['D',2,'what you'],['G',2,'are!'],
+          ['G',2,'Up a-'],['C',2,'bove the'],['G',2,'world so'],['D',2,'high,'],
+          ['G',2,'like a'],['C',2,'diamond'],['G',2,'in the'],['D',2,'sky.'],
+          ['G',2,'Twinkle,'],['G',2,'twinkle'],['C',2,'little'],['G',2,'star,'],
+          ['C',2,'how I'],['G',2,'wonder'],['D',2,'what you'],['G',2,'are!']]},
+ {title:'Old MacDonald', emoji:'🐮', sub:'G, C and D — E-I-E-I-O!', bpm:88,
+  events:[['G',4,'Old MacDonald'],['C',2,'had a'],['G',2,'farm,'],['D',2,'E-I-'],['G',2,'E-I-O!'],
+          ['G',4,'And on that farm he'],['C',2,'had a'],['G',2,'cow,'],['D',2,'E-I-'],['G',2,'E-I-O!'],
+          ['G',2,'With a moo-moo here'],['G',2,'and a moo-moo there,'],['G',2,'here a moo,'],['G',2,'there a moo,'],
+          ['G',4,'everywhere a moo-moo!'],
+          ['G',4,'Old MacDonald'],['C',2,'had a'],['G',2,'farm,'],['D',2,'E-I-'],['G',2,'E-I-O!']]},
+ {title:'Wheels on the Bus', emoji:'🚌', sub:'G and D — round and round!', bpm:92,
+  events:[['G',4,'The wheels on the bus go'],['G',4,'round and round,'],
+          ['D',4,'round and round,'],['G',4,'round and round.'],
+          ['G',4,'The wheels on the bus go'],['G',4,'round and round,'],
+          ['D',4,'all through the'],['G',4,'town!']]},
+ {title:'Itsy Bitsy Spider', emoji:'🕷️', sub:'G and D — up the spout!', bpm:80,
+  events:[['G',4,'The itsy bitsy spider'],['G',2,'climbed up the'],['D',2,'water'],['G',4,'spout.'],
+          ['G',4,'Down came the rain and'],['D',2,'washed the'],['G',2,'spider out.'],
+          ['G',4,'Out came the sun and'],['D',2,'dried up'],['G',2,'all the rain, and the'],
+          ['G',4,'itsy bitsy spider'],['D',2,'climbed up the'],['G',2,'spout again!']]},
+ {title:'Happy Birthday', emoji:'🎂', sub:'G, C and D — for parties!', bpm:80,
+  events:[['G',3,'Happy birthday to'],['D',3,'you!'],['D',3,'Happy birthday to'],['G',3,'you!'],
+          ['G',3,'Happy birthday dear'],['C',3,'buddy!'],['D',3,'Happy birthday to'],['G',3,'you!']]},
+];
+const list=document.getElementById('song-list');
+SONGS.forEach((s,i)=>{
+  const b=document.createElement('button'); b.className='song-btn';
+  b.innerHTML=`<span class="emoji">${s.emoji}</span><span><div class="t">${s.title}</div><div class="s">${s.sub}</div></span>`;
+  b.addEventListener('click',()=>startSong(i)); list.appendChild(b);
+});
+
+/* ---------- play-along engine ---------- */
+const bubble=document.getElementById('bubble'), bLetter=document.getElementById('bubble-letter'),
+      lyricEl=document.getElementById('lyric'), nextEl=document.getElementById('next-chord'),
+      countEl=document.getElementById('count'), cheer=document.getElementById('cheer');
+let timers=[];
+function clearTimers(){ timers.forEach(clearTimeout); timers=[]; }
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active'); }
+
+function startSong(idx){
+  const song=SONGS[idx], beatMs=60000/song.bpm;
+  show('play'); cheer.classList.remove('show'); clearTimers(); audio();
+  lyricEl.textContent=song.title; bLetter.textContent=''; bubble.style.background='#E8E0D0'; nextEl.textContent='';
+  ['3','2','1','🎸'].forEach((n,i)=> timers.push(setTimeout(()=>{ countEl.textContent=n; if(n==='🎸')countEl.textContent=''; }, i*700)));
+  const startAt=4*700;
+  let t=0;
+  song.events.forEach(([chord,beats,lyric],i)=>{
+    timers.push(setTimeout(()=>{
+      bubble.style.background=CHORDS[chord].color; bLetter.textContent=chord;
+      lyricEl.textContent=lyric;
+      const nxt=song.events[i+1]; nextEl.textContent= nxt ? `next: ${nxt[0]}` : 'last one!';
+      bubble.classList.remove('beat'); void bubble.offsetWidth; bubble.classList.add('beat');
+      strum(chord);
+    }, startAt + t*beatMs));
+    t += beats;
+  });
+  timers.push(setTimeout(()=>{
+    document.getElementById('cheer-msg').textContent=`You played ${song.title}!`;
+    cheer.classList.add('show');
+    const ac=audio(),tm=ac.currentTime;
+    [392,493.88,587.33,783.99].forEach((f,i)=>pluck(f,tm+i*0.12,0.4));
+  }, startAt + t*beatMs + 600));
+}
+document.getElementById('stop-btn').addEventListener('click',()=>{ clearTimers(); show('songs'); });
+document.getElementById('cheer-done').addEventListener('click',()=>{ cheer.classList.remove('show'); show('songs'); });
+
+/* ---------- tabs ---------- */
+const tabs={ 'tab-chords':'chords', 'tab-songs':'songs' };
+Object.entries(tabs).forEach(([tid,sid])=>{
+  document.getElementById(tid).addEventListener('click',()=>{
+    clearTimers();
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
+    document.getElementById(tid).classList.add('on'); show(sid);
+  });
+});
+</script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
