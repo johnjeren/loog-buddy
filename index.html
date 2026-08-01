@@ -97,6 +97,13 @@
   #chord-heard.hit{color:var(--em); animation:pop .4s;}
   #chord-heard.other{color:var(--soft);}
 
+  /* ---------- jam ---------- */
+  #jam-grid{flex:1; display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px;}
+  .jam-pad{border:none; border-radius:28px; color:#fff; cursor:pointer; font-family:var(--display);
+    font-size:clamp(3rem,10vw,5.5rem); box-shadow:var(--shadow); transition:transform .06s;}
+  .jam-pad:active{transform:scale(.94);}
+  .jam-pad.hit{animation:wiggle .35s;}
+
   /* ---------- toolbar: stars, tempo, mic ---------- */
   .songbar{display:flex; align-items:center; gap:10px; padding:4px 2px 12px; flex-wrap:wrap;}
   #star-total{font-family:var(--display); font-size:1.3rem; background:var(--card); border-radius:999px;
@@ -159,6 +166,11 @@
     <div class="song-list" id="song-list"></div>
   </section>
 
+  <!-- JAM -->
+  <section class="screen" id="jam">
+    <div id="jam-grid"></div>
+  </section>
+
   <!-- PLAY-ALONG -->
   <section class="screen" id="play">
     <div id="count"></div>
@@ -178,6 +190,7 @@
 <nav>
   <button id="tab-chords" class="on">🎨 Chords</button>
   <button id="tab-songs">🎵 Songs</button>
+  <button id="tab-jam">🤘 Jam</button>
 </nav>
 
 <script>
@@ -474,8 +487,36 @@ function startSong(idx){
 document.getElementById('stop-btn').addEventListener('click',()=>{ clearTimers(); show('songs'); });
 document.getElementById('cheer-done').addEventListener('click',()=>{ cheer.classList.remove('show'); show('songs'); });
 
+/* ---------- jam pads ---------- */
+const jamGrid=document.getElementById('jam-grid');
+Object.entries(CHORDS).forEach(([name,ch])=>{
+  const p=document.createElement('button'); p.className='jam-pad'; p.style.background=ch.color; p.textContent=name;
+  const hit=()=>{ strum(name); p.classList.remove('hit'); void p.offsetWidth; p.classList.add('hit'); };
+  p.addEventListener('pointerdown',hit);
+  jamGrid.appendChild(p);
+});
+
+/* ---------- tap the bubble to strum along ---------- */
+bubble.addEventListener('pointerdown',()=>{
+  const c=bLetter.textContent; if(!CHORDS[c]) return;
+  if(!micOn) strum(c);
+  bubble.classList.remove('beat'); void bubble.offsetWidth; bubble.classList.add('beat');
+});
+
+/* ---------- keep the screen awake while playing ---------- */
+let wakeLock=null;
+async function keepAwake(){ try{ wakeLock=await navigator.wakeLock?.request('screen'); }catch{} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') keepAwake(); });
+document.addEventListener('pointerdown',()=>{ if(!wakeLock) keepAwake(); },{once:true});
+
+/* ---------- remember tempo between sessions ---------- */
+if(LB.tempo===0.72){ tempoMul=0.72; slowBtn.classList.add('on'); }
+if(LB.tempo===1.3){ tempoMul=1.3; fastBtn.classList.add('on'); }
+const saveTempo=()=>{ LB.tempo=tempoMul; saveLB(); };
+slowBtn.addEventListener('click',saveTempo); fastBtn.addEventListener('click',saveTempo);
+
 /* ---------- tabs ---------- */
-const tabs={ 'tab-chords':'chords', 'tab-songs':'songs' };
+const tabs={ 'tab-chords':'chords', 'tab-songs':'songs', 'tab-jam':'jam' };
 Object.entries(tabs).forEach(([tid,sid])=>{
   document.getElementById(tid).addEventListener('click',()=>{
     clearTimers();
