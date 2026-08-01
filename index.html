@@ -90,6 +90,29 @@
   #cheer .stars{font-size:4.5rem; animation:pop .5s;}
   #cheer h2{font-family:var(--display); font-size:2.4rem; margin:0;}
   @keyframes pop{0%{transform:scale(.3);}70%{transform:scale(1.2);}}
+  /* ---------- toolbar: stars, tempo, mic ---------- */
+  .songbar{display:flex; align-items:center; gap:10px; padding:4px 2px 12px; flex-wrap:wrap;}
+  #star-total{font-family:var(--display); font-size:1.3rem; background:var(--card); border-radius:999px;
+    padding:8px 16px; box-shadow:var(--shadow);}
+  .toggle-group{display:flex; gap:6px; margin-left:auto;}
+  .toggle{font-size:1.4rem; border:3px solid rgba(51,48,46,.12); background:var(--card); border-radius:16px;
+    padding:8px 14px; cursor:pointer;}
+  .toggle.on{border-color:var(--ink); background:var(--ink);}
+  .song-btn .badge{margin-left:auto; font-size:1.3rem;}
+
+  /* ---------- buddy + stage ---------- */
+  #stage{display:flex; align-items:center; justify-content:center; gap:4vw;}
+  #buddy{font-size:clamp(3.4rem,12vw,6rem); line-height:1;}
+  #buddy.dance{animation:hop .3s;}
+  @keyframes hop{40%{transform:translateY(-18px) rotate(-8deg) scale(1.1);}}
+
+  /* ---------- confetti + cheer extras ---------- */
+  .confetti{position:absolute; top:-8%; z-index:6; font-size:1.9rem; animation:fall 1.6s ease-in forwards; pointer-events:none;}
+  @keyframes fall{to{transform:translateY(115vh) rotate(340deg); opacity:.7;}}
+  #mic-report{font-family:var(--display); font-size:1.4rem; color:var(--coral); min-height:1.5rem;}
+  #new-animal{font-family:var(--display); font-size:1.5rem; display:none;}
+  #new-animal.show{display:block; animation:pop .5s;}
+  #band-shelf{font-size:1.7rem; letter-spacing:6px; margin-top:4px;}
   @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important;}}
 </style>
 
@@ -115,6 +138,15 @@
 
   <!-- SONG LIST -->
   <section class="screen" id="songs">
+    <div class="songbar">
+      <span id="star-total">⭐️ 0</span>
+      <span id="band-shelf"></span>
+      <span class="toggle-group">
+        <button class="toggle" id="tempo-slow" aria-label="slow">🐢</button>
+        <button class="toggle" id="tempo-fast" aria-label="fast">🐇</button>
+        <button class="toggle" id="mic-toggle" aria-label="listen to me">🎤</button>
+      </span>
+    </div>
     <div class="song-list" id="song-list"></div>
   </section>
 
@@ -122,10 +154,14 @@
   <section class="screen" id="play">
     <div id="count"></div>
     <div class="lyric" id="lyric"></div>
-    <div id="bubble"><span class="letter" id="bubble-letter"></span><span class="strum">STRUM!</span></div>
+    <div id="stage">
+      <div id="buddy">🐵</div>
+      <div id="bubble"><span class="letter" id="bubble-letter"></span><span class="strum">STRUM!</span></div>
+    </div>
     <div id="next-chord"></div>
     <div class="play-ctl"><button id="stop-btn">⏹ Stop</button></div>
     <div id="cheer"><div class="stars">⭐️⭐️⭐️</div><h2 id="cheer-msg">You did it!</h2>
+      <div id="mic-report"></div><div id="new-animal"></div>
       <button class="strum-btn" id="cheer-done">Yay!</button></div>
   </section>
 </main>
@@ -229,12 +265,115 @@ const SONGS=[
   events:[['G',3,'Happy birthday to'],['D',3,'you!'],['D',3,'Happy birthday to'],['G',3,'you!'],
           ['G',3,'Happy birthday dear'],['C',3,'buddy!'],['D',3,'Happy birthday to'],['G',3,'you!']]},
 ];
+/* ---------- progress: stars, streaks, animal band (localStorage) ---------- */
+const ANIMALS=['🐵','🐶','🐱','🐸','🦁','🐼','🦊','🐨','🦄','🐙'];
+const STARS_PER_ANIMAL=3;
+let LB;
+try{ LB=JSON.parse(localStorage.getItem('loogbuddy'))||{}; }catch{ LB={}; }
+LB.total=LB.total||0; LB.done=LB.done||{}; LB.animals=LB.animals||1;
+function saveLB(){ try{ localStorage.setItem('loogbuddy',JSON.stringify(LB)); }catch{} }
+function currentBuddy(){ return ANIMALS[LB.animals-1]; }
+function refreshBar(){
+  document.getElementById('star-total').textContent=`⭐️ ${LB.total}`;
+  document.getElementById('band-shelf').textContent=ANIMALS.slice(0,LB.animals).join('');
+}
+
 const list=document.getElementById('song-list');
-SONGS.forEach((s,i)=>{
-  const b=document.createElement('button'); b.className='song-btn';
-  b.innerHTML=`<span class="emoji">${s.emoji}</span><span><div class="t">${s.title}</div><div class="s">${s.sub}</div></span>`;
-  b.addEventListener('click',()=>startSong(i)); list.appendChild(b);
+function renderSongs(){
+  list.innerHTML='';
+  SONGS.forEach((s,i)=>{
+    const b=document.createElement('button'); b.className='song-btn';
+    const stars=LB.done[s.title]||0;
+    b.innerHTML=`<span class="emoji">${s.emoji}</span><span><div class="t">${s.title}</div><div class="s">${s.sub}</div></span>
+      <span class="badge">${stars?'⭐️'.repeat(Math.min(stars,3)):''}</span>`;
+    b.addEventListener('click',()=>startSong(i)); list.appendChild(b);
+  });
+  refreshBar();
+}
+renderSongs();
+
+/* ---------- tempo: turtle / rabbit ---------- */
+let tempoMul=1;
+const slowBtn=document.getElementById('tempo-slow'), fastBtn=document.getElementById('tempo-fast');
+slowBtn.addEventListener('click',()=>{ tempoMul = tempoMul===0.72 ? 1 : 0.72;
+  slowBtn.classList.toggle('on',tempoMul===0.72); fastBtn.classList.remove('on'); });
+fastBtn.addEventListener('click',()=>{ tempoMul = tempoMul===1.3 ? 1 : 1.3;
+  fastBtn.classList.toggle('on',tempoMul===1.3); slowBtn.classList.remove('on'); });
+
+/* ---------- mic strum listener (amplitude spikes, deliberately generous) ---------- */
+const micBtn=document.getElementById('mic-toggle');
+let micOn=false, micStream=null, analyser=null, micData=null, freqData=null, micLevel=0, micLoop=0;
+micBtn.addEventListener('click',async()=>{
+  if(micOn){ micOn=false; micBtn.classList.remove('on'); stopMic(); return; }
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const ac=audio(), src=ac.createMediaStreamSource(micStream);
+    analyser=ac.createAnalyser(); analyser.fftSize=4096; analyser.smoothingTimeConstant=0.4; src.connect(analyser);
+    micData=new Float32Array(analyser.fftSize);
+    freqData=new Float32Array(analyser.frequencyBinCount);
+    micOn=true; micBtn.classList.add('on'); trackMic();
+  }catch{ micBtn.textContent='🎤🚫'; setTimeout(()=>micBtn.textContent='🎤',1500); }
 });
+function trackMic(){
+  if(!micOn||!analyser) return;
+  analyser.getFloatTimeDomainData(micData);
+  let sum=0; for(let i=0;i<micData.length;i++) sum+=micData[i]*micData[i];
+  micLevel=Math.sqrt(sum/micData.length);
+  micLoop=requestAnimationFrame(trackMic);
+}
+function stopMic(){ cancelAnimationFrame(micLoop); micStream?.getTracks().forEach(t=>t.stop()); micStream=null; analyser=null; }
+
+/* chord guesser: which of the 5 chords does the spectrum look most like?
+   Scores energy at each chord's note fundamentals + 2 harmonics. Best-effort and
+   deliberately generous — used only to praise, never to say "wrong". */
+function guessChord(){
+  if(!analyser) return null;
+  analyser.getFloatFrequencyData(freqData);
+  const binHz=audio().sampleRate/analyser.fftSize;
+  const energyAt=f=>{
+    const b=Math.round(f/binHz); let m=-160;
+    for(let i=Math.max(0,b-1);i<=b+1;i++) m=Math.max(m,freqData[i]??-160);
+    return m+140; // shift so silence ~ -20dB → 0-ish floor
+  };
+  let best=null,bestScore=-1;
+  for(const [name,ch] of Object.entries(CHORDS)){
+    let s=0;
+    ch.frets.forEach((fr,i)=>{
+      const f=OPEN_FREQ[i]*Math.pow(2,fr/12);
+      s+=energyAt(f)+0.5*energyAt(f*2)+0.25*energyAt(f*3);
+    });
+    if(s>bestScore){ bestScore=s; best=name; }
+  }
+  return best;
+}
+
+/* watch a window after a cue: did the room get loud, and did it sound like the chord? */
+function listenForStrum(hitBox, expected){
+  if(!micOn) return;
+  const start=performance.now(), base=micLevel;
+  const check=()=>{
+    if(performance.now()-start>1100) return;
+    if(micLevel>Math.max(0.02, base*2.2)){
+      hitBox.hits++;
+      setTimeout(()=>{ if(guessChord()===expected) hitBox.correct++; },120); // let the strum ring
+      return;
+    }
+    requestAnimationFrame(check);
+  };
+  requestAnimationFrame(check);
+}
+
+/* ---------- confetti ---------- */
+function confetti(n=24){
+  const host=document.getElementById('play');
+  for(let i=0;i<n;i++){
+    const s=document.createElement('span'); s.className='confetti';
+    s.textContent=['🎉','⭐️','🎸','✨','🎵'][i%5];
+    s.style.left=(Math.random()*92)+'%';
+    s.style.animationDelay=(Math.random()*0.5)+'s';
+    host.appendChild(s); setTimeout(()=>s.remove(),2400);
+  }
+}
 
 /* ---------- play-along engine ---------- */
 const bubble=document.getElementById('bubble'), bLetter=document.getElementById('bubble-letter'),
@@ -245,10 +384,13 @@ function clearTimers(){ timers.forEach(clearTimeout); timers=[]; }
 function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active'); }
 
+const buddyEl=document.getElementById('buddy');
 function startSong(idx){
-  const song=SONGS[idx], beatMs=60000/song.bpm;
+  const song=SONGS[idx], beatMs=(60000/song.bpm)/tempoMul;
   show('play'); cheer.classList.remove('show'); clearTimers(); audio();
   lyricEl.textContent=song.title; bLetter.textContent=''; bubble.style.background='#E8E0D0'; nextEl.textContent='';
+  buddyEl.textContent=currentBuddy();
+  const hitBox={hits:0, correct:0, total:song.events.length};
   ['3','2','1','🎸'].forEach((n,i)=> timers.push(setTimeout(()=>{ countEl.textContent=n; if(n==='🎸')countEl.textContent=''; }, i*700)));
   const startAt=4*700;
   let t=0;
@@ -258,13 +400,29 @@ function startSong(idx){
       lyricEl.textContent=lyric;
       const nxt=song.events[i+1]; nextEl.textContent= nxt ? `next: ${nxt[0]}` : 'last one!';
       bubble.classList.remove('beat'); void bubble.offsetWidth; bubble.classList.add('beat');
-      strum(chord);
+      buddyEl.classList.remove('dance'); void buddyEl.offsetWidth; buddyEl.classList.add('dance');
+      if(micOn) listenForStrum(hitBox, chord);  // his guitar is the sound
+      else strum(chord);
     }, startAt + t*beatMs));
     t += beats;
   });
   timers.push(setTimeout(()=>{
+    // reward: star per finish (max 3 shown per song), animal every 3 total stars
+    LB.total++;
+    LB.done[song.title]=Math.min((LB.done[song.title]||0)+1, 99);
+    let newAnimal=null;
+    if(LB.total%STARS_PER_ANIMAL===0 && LB.animals<ANIMALS.length){ LB.animals++; newAnimal=currentBuddy(); }
+    saveLB(); renderSongs();
     document.getElementById('cheer-msg').textContent=`You played ${song.title}!`;
-    cheer.classList.add('show');
+    const rep=document.getElementById('mic-report');
+    rep.textContent = micOn
+      ? (hitBox.hits ? `I heard you strum ${hitBox.hits} time${hitBox.hits===1?'':'s'}!` +
+          (hitBox.correct ? ` ${hitBox.correct} sounded just right! 🎯` : '') : 'Strum louder next time — I was listening! 👂')
+      : '';
+    const na=document.getElementById('new-animal');
+    na.classList.remove('show');
+    if(newAnimal){ na.textContent=`New bandmate joined: ${newAnimal}`; na.classList.add('show'); }
+    cheer.classList.add('show'); confetti(newAnimal?40:22);
     const ac=audio(),tm=ac.currentTime;
     [392,493.88,587.33,783.99].forEach((f,i)=>pluck(f,tm+i*0.12,0.4));
   }, startAt + t*beatMs + 600));
