@@ -22,29 +22,34 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
   html,body{height:100%;}
-  body{margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,system-ui,sans-serif;
+  body{margin:0; color:var(--ink); font-family:-apple-system,system-ui,sans-serif;
+    background:var(--paper) radial-gradient(rgba(51,48,46,.045) 1.5px, transparent 1.5px);
+    background-size:26px 26px;
     display:flex; flex-direction:column; overflow:hidden; touch-action:manipulation;}
-  header{padding:14px 20px 6px; display:flex; align-items:center; gap:10px;}
+  header{padding:calc(10px + env(safe-area-inset-top)) 20px 6px; display:flex; align-items:center; gap:10px;}
   header h1{font-family:var(--display); font-size:1.5rem; margin:0; letter-spacing:.5px;}
-  header .dot{width:14px;height:14px;border-radius:50%;}
+  header .dot{width:14px;height:14px;border-radius:50%; box-shadow:0 2px 0 rgba(51,48,46,.15);}
   main{flex:1; overflow:hidden; position:relative;}
-  .screen{position:absolute; inset:0; padding:8px 16px 16px; display:none; flex-direction:column;}
+  .screen{position:absolute; inset:0; display:none; flex-direction:column;
+    padding:8px calc(16px + env(safe-area-inset-right)) 16px calc(16px + env(safe-area-inset-left));}
   .screen.active{display:flex;}
 
   /* ---------- tabs ---------- */
   nav{display:flex; gap:12px; padding:10px 16px calc(14px + env(safe-area-inset-bottom)); background:#fff;
     border-top:3px solid rgba(51,48,46,.08);}
   nav button{flex:1; font-family:var(--display); font-size:1.25rem; padding:14px; border:none; border-radius:20px;
-    background:var(--paper); color:var(--soft); cursor:pointer;}
-  nav button.on{background:var(--ink); color:#fff;}
+    background:var(--paper); color:var(--soft); cursor:pointer; transition:transform .08s;}
+  nav button:active{transform:scale(.95);}
+  nav button.on{background:var(--ink); color:#fff; box-shadow:0 4px 0 rgba(51,48,46,.25);}
   nav button:focus-visible{outline:3px solid var(--g); outline-offset:2px;}
 
   /* ---------- chords screen ---------- */
   .chord-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:12px;}
   .chord-card{border:none; border-radius:24px; background:var(--card); box-shadow:var(--shadow);
+    border-bottom:6px solid var(--cc, rgba(51,48,46,.12));
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer;
     padding:16px 8px; transition:transform .08s;}
-  .chord-card:active{transform:scale(.96);}
+  .chord-card:active{transform:scale(.96) translateY(2px);}
   .chord-card .big{font-family:var(--display); font-size:clamp(2.6rem,9vw,4.5rem); line-height:1;}
   .chord-card .hint{font-family:var(--display); font-size:.85rem; color:#fff; padding:5px 12px; border-radius:999px; white-space:nowrap;}
   .chord-card.playing{animation:wiggle .4s;}
@@ -65,7 +70,8 @@
   .song-btn{border:none; border-radius:24px; background:var(--card); box-shadow:var(--shadow); padding:16px 20px;
     display:flex; align-items:center; gap:16px; cursor:pointer; text-align:left;}
   .song-btn:active{transform:scale(.98);}
-  .song-btn .emoji{font-size:2.4rem;}
+  .song-btn .emoji{font-size:2rem; width:64px; height:64px; flex:0 0 64px; display:flex; align-items:center;
+    justify-content:center; background:var(--paper); border-radius:20px;}
   .song-btn .t{font-family:var(--display); font-size:1.5rem;}
   .song-btn .s{color:var(--soft); font-size:.95rem; margin-top:2px;}
 
@@ -73,7 +79,8 @@
   #play{align-items:center; justify-content:center; gap:8px;}
   #play .lyric{font-family:var(--display); font-size:clamp(1.4rem,4.5vw,2.2rem); min-height:2.6rem; text-align:center; text-wrap:balance;}
   #bubble{width:min(46vw,300px); height:min(46vw,300px); border-radius:50%; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; color:#fff; transition:background .2s;}
+    align-items:center; justify-content:center; color:#fff; transition:background .2s; cursor:pointer;
+    box-shadow:0 8px 0 rgba(51,48,46,.14), inset 0 -10px 0 rgba(0,0,0,.08);}
   #bubble .letter{font-family:var(--display); font-size:clamp(4rem,18vw,8rem); line-height:1;}
   #bubble .strum{font-family:var(--display); font-size:1.3rem; opacity:0; letter-spacing:2px;}
   #bubble.beat{animation:bounce .28s;}
@@ -100,8 +107,10 @@
   /* ---------- jam ---------- */
   #jam-grid{flex:1; display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px;}
   .jam-pad{border:none; border-radius:28px; color:#fff; cursor:pointer; font-family:var(--display);
-    font-size:clamp(3rem,10vw,5.5rem); box-shadow:var(--shadow); transition:transform .06s;}
-  .jam-pad:active{transform:scale(.94);}
+    font-size:clamp(3rem,10vw,5.5rem); transition:transform .06s;
+    box-shadow:0 7px 0 rgba(51,48,46,.22), inset 0 -8px 0 rgba(0,0,0,.1);
+    text-shadow:0 3px 0 rgba(0,0,0,.15);}
+  .jam-pad:active{transform:scale(.94) translateY(4px); box-shadow:0 3px 0 rgba(51,48,46,.22), inset 0 -8px 0 rgba(0,0,0,.1);}
   .jam-pad.hit{animation:wiggle .35s;}
 
   /* ---------- toolbar: stars, tempo, mic ---------- */
@@ -245,7 +254,7 @@ function drawChord(name){
 let currentChord='Em';
 const chordRow=document.getElementById('chord-row');
 Object.entries(CHORDS).forEach(([name,ch])=>{
-  const b=document.createElement('button'); b.className='chord-card';
+  const b=document.createElement('button'); b.className='chord-card'; b.style.setProperty('--cc',ch.color);
   b.innerHTML=`<span class="big" style="color:${ch.color}">${name}</span><span class="hint" style="background:${ch.color}">${ch.hint}</span>`;
   b.addEventListener('click',()=>{
     currentChord=name; drawChord(name); strum(name);
