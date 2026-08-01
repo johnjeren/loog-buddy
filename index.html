@@ -90,6 +90,13 @@
   #cheer .stars{font-size:4.5rem; animation:pop .5s;}
   #cheer h2{font-family:var(--display); font-size:2.4rem; margin:0;}
   @keyframes pop{0%{transform:scale(.3);}70%{transform:scale(1.2);}}
+  /* ---------- chord match feedback ---------- */
+  #mic-toggle-chords{font-family:var(--display); font-size:1.05rem;}
+  #mic-toggle-chords.on{color:#fff;}
+  #chord-heard{font-family:var(--display); font-size:1.3rem; min-height:3.2rem; text-align:center; text-wrap:balance;}
+  #chord-heard.hit{color:var(--em); animation:pop .4s;}
+  #chord-heard.other{color:var(--soft);}
+
   /* ---------- toolbar: stars, tempo, mic ---------- */
   .songbar{display:flex; align-items:center; gap:10px; padding:4px 2px 12px; flex-wrap:wrap;}
   #star-total{font-family:var(--display); font-size:1.3rem; background:var(--card); border-radius:999px;
@@ -132,6 +139,8 @@
       <div class="diagram-side">
         <div class="name" id="diag-name">Em</div>
         <button class="strum-btn" id="strum-again">🎸 Strum!</button>
+        <button class="toggle" id="mic-toggle-chords" aria-label="listen to me">🎤 Listen</button>
+        <div id="chord-heard"></div>
       </div>
     </div>
   </section>
@@ -197,6 +206,7 @@ function pluck(freq, when, vol=0.5){
 }
 function strum(name, when){
   const ac=audio(); when = when ?? ac.currentTime;
+  try{ matchCooldownUntil=performance.now()+1800; }catch{}  // don't let the matcher hear the app itself
   CHORDS[name].frets.forEach((fr,i)=> pluck(OPEN_FREQ[i]*Math.pow(2,fr/12), when + i*0.06, 0.42));
 }
 
@@ -301,25 +311,59 @@ fastBtn.addEventListener('click',()=>{ tempoMul = tempoMul===1.3 ? 1 : 1.3;
   fastBtn.classList.toggle('on',tempoMul===1.3); slowBtn.classList.remove('on'); });
 
 /* ---------- mic strum listener (amplitude spikes, deliberately generous) ---------- */
-const micBtn=document.getElementById('mic-toggle');
-let micOn=false, micStream=null, analyser=null, micData=null, freqData=null, micLevel=0, micLoop=0;
-micBtn.addEventListener('click',async()=>{
-  if(micOn){ micOn=false; micBtn.classList.remove('on'); stopMic(); return; }
+const micBtn=document.getElementById('mic-toggle'), micBtnChords=document.getElementById('mic-toggle-chords');
+let micOn=false, micStream=null, analyser=null, micData=null, freqData=null, micLevel=0, micBase=0.006, micLoop=0;
+function micButtonsSync(){
+  micBtn.classList.toggle('on',micOn);
+  micBtnChords.classList.toggle('on',micOn);
+  micBtnChords.style.background=micOn?'var(--coral)':'';
+  if(!micOn) heardEl.textContent='';
+}
+async function toggleMic(failBtn){
+  if(micOn){ micOn=false; stopMic(); micButtonsSync(); return; }
   try{
     micStream=await navigator.mediaDevices.getUserMedia({audio:true});
     const ac=audio(), src=ac.createMediaStreamSource(micStream);
     analyser=ac.createAnalyser(); analyser.fftSize=4096; analyser.smoothingTimeConstant=0.4; src.connect(analyser);
     micData=new Float32Array(analyser.fftSize);
     freqData=new Float32Array(analyser.frequencyBinCount);
-    micOn=true; micBtn.classList.add('on'); trackMic();
-  }catch{ micBtn.textContent='🎤🚫'; setTimeout(()=>micBtn.textContent='🎤',1500); }
-});
+    micOn=true; trackMic();
+  }catch{ const t=failBtn.textContent; failBtn.textContent='🎤🚫'; setTimeout(()=>failBtn.textContent=t,1500); }
+  micButtonsSync();
+}
+micBtn.addEventListener('click',()=>toggleMic(micBtn));
+micBtnChords.addEventListener('click',()=>toggleMic(micBtnChords));
 function trackMic(){
   if(!micOn||!analyser) return;
   analyser.getFloatTimeDomainData(micData);
   let sum=0; for(let i=0;i<micData.length;i++) sum+=micData[i]*micData[i];
   micLevel=Math.sqrt(sum/micData.length);
+  micBase=micBase*0.995+micLevel*0.005;   // slow-moving room noise floor
+  chordMatchTick();
   micLoop=requestAnimationFrame(trackMic);
+}
+
+/* ---------- chord match game on the Chords tab ---------- */
+const heardEl=document.getElementById('chord-heard');
+let matchCooldownUntil=0;
+function chordMatchTick(){
+  if(!document.getElementById('chords').classList.contains('active')) return;
+  const now=performance.now();
+  if(now<matchCooldownUntil) return;
+  if(micLevel>Math.max(0.025, micBase*3)){
+    matchCooldownUntil=now+1400;          // one guess per strum
+    setTimeout(()=>{                       // let the chord ring before guessing
+      if(!micOn) return;
+      const heard=guessChord();
+      if(heard===currentChord){
+        heardEl.className='hit'; heardEl.textContent=`That's ${currentChord}! 🎯⭐️`;
+        matchCooldownUntil=performance.now()+2600;   // reward jingle shouldn't retrigger the matcher
+        const ac=audio(),tm=ac.currentTime; [523.25,659.25,783.99].forEach((f,i)=>pluck(f,tm+i*0.09,0.3));
+      }else{
+        heardEl.className='other'; heardEl.textContent=`I heard something like ${heard} — try again!`;
+      }
+    },200);
+  }
 }
 function stopMic(){ cancelAnimationFrame(micLoop); micStream?.getTracks().forEach(t=>t.stop()); micStream=null; analyser=null; }
 
