@@ -17,62 +17,92 @@
   :root{
     --paper:#FFF8EC; --ink:#33302E; --soft:#8A8377;
     --em:#3EC98B; --c:#FFB528; --g:#4FA8F6; --coral:#FF6B5E;
-    --card:#FFFFFF; --shadow:0 6px 0 rgba(51,48,46,.12);
-    --display:"Arial Rounded MT Bold","Hiragino Maru Gothic ProN",-apple-system,sans-serif;
+    --card:#FFFFFF;
+    --shadow:0 6px 0 rgba(51,48,46,.12), 0 14px 24px -14px rgba(51,48,46,.2);
+    --edge:3px solid var(--ink);
+    --pop:cubic-bezier(.34,1.56,.64,1);
+    --display:"ui-rounded","SF Pro Rounded","Arial Rounded MT Bold","Hiragino Maru Gothic ProN",-apple-system,sans-serif;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
   html,body{height:100%;}
   body{margin:0; color:var(--ink); font-family:-apple-system,system-ui,sans-serif;
     background:var(--paper) radial-gradient(rgba(51,48,46,.045) 1.5px, transparent 1.5px);
-    background-size:26px 26px;
+    background-size:26px 26px; transition:background-color .35s;
     display:flex; flex-direction:column; overflow:hidden; touch-action:manipulation;}
-  header{padding:calc(10px + env(safe-area-inset-top)) 20px 6px; display:flex; align-items:center; gap:10px;}
-  header h1{font-family:var(--display); font-size:1.5rem; margin:0; letter-spacing:.5px;}
-  header .dot{width:14px;height:14px;border-radius:50%; box-shadow:0 2px 0 rgba(51,48,46,.15);}
+  /* every tab is its own room in the playhouse */
+  body[data-screen="chords"]{--paper:#FFF1CE;}
+  body[data-screen="songs"]{--paper:#E4F6EB;}
+  body[data-screen="switch"]{--paper:#E4F0FD;}
+  body[data-screen="jam"]{--paper:#FFE9E2;}
+  body[data-screen="stickers"]{--paper:#F3EDFF;}
+  body[data-screen="tuner"]{--paper:#E4F0FD;}
+  body[data-screen="strum"]{--paper:#FDE9F2;}
+  header{padding:calc(10px + env(safe-area-inset-top)) 20px 0 20px; display:flex; align-items:center; gap:10px;}
+  header h1{font-family:var(--display); font-size:1.6rem; margin:0; letter-spacing:.5px; transform:rotate(-1.2deg);}
+  #header-band{margin-left:auto; align-self:flex-end; height:40px; overflow:hidden; display:flex; align-items:flex-start;}
+  #header-band svg{width:36px; height:54px; margin-left:-9px;}
+  #header-band svg:nth-child(odd){transform:translateY(6px) rotate(-6deg);}
+  #header-band svg:nth-child(even){transform:translateY(2px) rotate(5deg);}
+  header .dot{width:14px;height:14px;border-radius:50%; box-shadow:0 2px 0 rgba(51,48,46,.15);
+    animation:dotIn .5s var(--pop) backwards;}
+  header .dot:nth-child(2){animation-delay:.07s;}
+  header .dot:nth-child(3){animation-delay:.14s;}
+  @keyframes dotIn{from{transform:scale(0);}}
   main{flex:1; overflow:hidden; position:relative;}
   .screen{position:absolute; inset:0; display:none; flex-direction:column;
     padding:8px calc(16px + env(safe-area-inset-right)) 16px calc(16px + env(safe-area-inset-left));}
-  .screen.active{display:flex;}
+  .screen.active{display:flex; animation:screenIn .3s var(--pop);}
+  @keyframes screenIn{from{opacity:0; transform:translateY(12px) scale(.985);}}
 
   /* ---------- tabs ---------- */
-  nav{display:flex; gap:12px; padding:10px 16px calc(14px + env(safe-area-inset-bottom)); background:#fff;
-    border-top:3px solid rgba(51,48,46,.08);}
-  nav button{flex:1; font-family:var(--display); font-size:1rem; padding:14px 4px; border:none; border-radius:20px;
-    background:var(--paper); color:var(--soft); cursor:pointer; transition:transform .08s; white-space:nowrap;}
-  nav button:active{transform:scale(.95);}
-  nav button.on{background:var(--ink); color:#fff; box-shadow:0 4px 0 rgba(51,48,46,.25);}
+  nav{display:flex; gap:10px; padding:12px 14px calc(14px + env(safe-area-inset-bottom)); background:#fff;
+    border-top:3px solid var(--ink);}
+  nav button{flex:1; font-family:var(--display); font-size:.95rem; padding:8px 4px 10px; border:var(--edge); border-radius:22px;
+    background:#fff; color:var(--ink); cursor:pointer; transition:transform .12s var(--pop); white-space:nowrap;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    box-shadow:0 4px 0 rgba(51,48,46,.15);}
+  nav button .ico{font-size:1.7rem; line-height:1;}
+  nav button:active{transform:scale(.94) translateY(2px);}
+  nav button.on{background:var(--tc,var(--ink)); color:#fff; transform:scale(1.07) translateY(-4px);
+    box-shadow:0 7px 0 rgba(51,48,46,.22); animation:navPop .3s var(--pop);}
+  @keyframes navPop{50%{transform:translateY(-7px) scale(1.12);}}
   nav button:focus-visible{outline:3px solid var(--g); outline-offset:2px;}
 
   /* ---------- chords screen ---------- */
   .chord-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:12px;}
-  .chord-card{border:none; border-radius:24px; background:var(--card); box-shadow:var(--shadow);
+  .chord-card{border:var(--edge); border-radius:24px; background:var(--card); box-shadow:var(--shadow);
     border-bottom:6px solid var(--cc, rgba(51,48,46,.12));
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer;
-    padding:16px 8px; transition:transform .08s;}
-  .chord-card:active{transform:scale(.96) translateY(2px);}
+    padding:16px 8px; transition:transform .12s var(--pop);}
+  .chord-card:nth-child(odd){transform:rotate(-.8deg);}
+  .chord-card:nth-child(even){transform:rotate(.7deg);}
+  .chord-card:active{transform:scale(.95,.92) translateY(3px);}
   .chord-card .big{font-family:var(--display); font-size:clamp(2.6rem,9vw,4.5rem); line-height:1;}
   .chord-card .hint{font-family:var(--display); font-size:.85rem; color:#fff; padding:5px 12px; border-radius:999px; white-space:nowrap;}
   .chord-card.playing{animation:wiggle .4s;}
   @keyframes wiggle{25%{transform:rotate(-2deg) scale(1.03);}75%{transform:rotate(2deg) scale(1.03);}}
 
-  .diagram-wrap{flex:1; min-height:0; margin-top:14px; background:var(--card); border-radius:28px; box-shadow:var(--shadow);
+  .diagram-wrap{flex:1; min-height:0; margin-top:14px; background:var(--card); border-radius:28px;
+    border:var(--edge); box-shadow:var(--shadow);
     display:flex; align-items:center; justify-content:center; gap:20px; padding:12px;}
   .diagram-wrap svg{height:100%; max-width:52%;}
   .diagram-side{display:flex; flex-direction:column; align-items:center; gap:10px;}
   .diagram-side .name{font-family:var(--display); font-size:2.6rem;}
-  .strum-btn{font-family:var(--display); font-size:1.5rem; color:#fff; background:var(--coral); border:none;
+  .strum-btn{font-family:var(--display); font-size:1.5rem; color:#fff; background:var(--coral); border:var(--edge);
     border-radius:999px; padding:16px 34px; cursor:pointer; box-shadow:0 5px 0 #d94f44;}
   .strum-btn:active{transform:translateY(3px); box-shadow:0 2px 0 #d94f44;}
 
   /* ---------- songs screen ---------- */
   .song-list{flex:1; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;
     align-content:start; overflow-y:auto; padding-bottom:8px;}
-  .song-btn{border:none; border-radius:24px; background:var(--card); box-shadow:var(--shadow); padding:16px 20px;
-    display:flex; align-items:center; gap:16px; cursor:pointer; text-align:left;}
-  .song-btn:active{transform:scale(.98);}
-  .song-btn .emoji{font-size:2rem; width:64px; height:64px; flex:0 0 64px; display:flex; align-items:center;
-    justify-content:center; background:var(--paper); border-radius:20px;}
-  .song-btn .t{font-family:var(--display); font-size:1.5rem;}
+  .song-btn{border:var(--edge); border-radius:24px; background:var(--card); box-shadow:var(--shadow); padding:16px 20px;
+    display:flex; align-items:center; gap:16px; cursor:pointer; text-align:left; transition:transform .12s var(--pop);}
+  .song-btn:nth-child(odd){transform:rotate(-.35deg);}
+  .song-btn:nth-child(even){transform:rotate(.3deg);}
+  .song-btn:active{transform:scale(.97) translateY(2px);}
+  .song-btn .emoji{font-size:1.8rem; width:56px; height:56px; flex:0 0 56px; display:flex; align-items:center;
+    justify-content:center; background:var(--paper); border-radius:18px;}
+  .song-btn .t{font-family:var(--display); font-size:1.3rem; line-height:1.15;}
   .song-btn .s{color:var(--soft); font-size:.95rem; margin-top:2px;}
 
   /* ---------- play-along ---------- */
@@ -80,7 +110,11 @@
   #play .lyric{font-family:var(--display); font-size:clamp(1.4rem,4.5vw,2.2rem); min-height:2.6rem; text-align:center; text-wrap:balance;}
   #bubble{width:min(46vw,300px); height:min(46vw,300px); border-radius:50%; display:flex; flex-direction:column;
     align-items:center; justify-content:center; color:#fff; transition:background .2s; cursor:pointer;
-    box-shadow:0 8px 0 rgba(51,48,46,.14), inset 0 -10px 0 rgba(0,0,0,.08);}
+    border:4px solid var(--ink);
+    box-shadow:0 8px 0 rgba(51,48,46,.14), 0 20px 32px -18px rgba(51,48,46,.3),
+      inset 0 12px 0 rgba(255,255,255,.16), inset 0 -10px 0 rgba(0,0,0,.08);
+    animation:breathe 3s ease-in-out infinite;}
+  @keyframes breathe{50%{transform:scale(1.02);}}
   #bubble .letter{font-family:var(--display); font-size:clamp(4rem,18vw,8rem); line-height:1;}
   #bubble .strum{font-family:var(--display); font-size:1.3rem; opacity:0; letter-spacing:2px;}
   #bubble.beat{animation:bounce .28s;}
@@ -97,8 +131,14 @@
   .play-ctl button{font-family:var(--display); font-size:1.2rem; border:none; border-radius:999px; padding:14px 28px; cursor:pointer;}
   #stop-btn{background:var(--paper); color:var(--ink); border:3px solid rgba(51,48,46,.15);}
   #cheer{position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center;
-    background:var(--paper); z-index:5; gap:10px;}
+    background:var(--paper); z-index:5; gap:10px; overflow:hidden;}
   #cheer.show{display:flex;}
+  #cheer::before{content:''; position:absolute; left:50%; top:50%; width:200vmax; height:200vmax;
+    margin:-100vmax 0 0 -100vmax;
+    background:repeating-conic-gradient(rgba(255,181,40,.1) 0 9deg, transparent 9deg 18deg);
+    animation:sunspin 26s linear infinite;}
+  @keyframes sunspin{to{transform:rotate(360deg);}}
+  #cheer>*{position:relative;}
   #cheer .stars{font-size:4.5rem; animation:pop .5s;}
   #cheer h2{font-family:var(--display); font-size:2.4rem; margin:0;}
   @keyframes pop{0%{transform:scale(.3);}70%{transform:scale(1.2);}}
@@ -111,26 +151,33 @@
 
   /* ---------- jam ---------- */
   #jam-grid{flex:1; display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px;}
-  .jam-pad{border:none; border-radius:28px; color:#fff; cursor:pointer; font-family:var(--display);
+  .jam-pad{border:var(--edge); border-radius:28px; color:#fff; cursor:pointer; font-family:var(--display);
     font-size:clamp(3rem,10vw,5.5rem); transition:transform .06s;
-    box-shadow:0 7px 0 rgba(51,48,46,.22), inset 0 -8px 0 rgba(0,0,0,.1);
+    box-shadow:0 7px 0 rgba(51,48,46,.22), 0 18px 28px -16px rgba(51,48,46,.35),
+      inset 0 8px 0 rgba(255,255,255,.22), inset 0 -8px 0 rgba(0,0,0,.1);
     text-shadow:0 3px 0 rgba(0,0,0,.15);}
-  .jam-pad:active{transform:scale(.94) translateY(4px); box-shadow:0 3px 0 rgba(51,48,46,.22), inset 0 -8px 0 rgba(0,0,0,.1);}
+  .jam-pad:active{transform:scale(.93,.9) translateY(5px);
+    box-shadow:0 2px 0 rgba(51,48,46,.22), inset 0 8px 0 rgba(255,255,255,.22), inset 0 -8px 0 rgba(0,0,0,.1);}
   .jam-pad.hit{animation:wiggle .35s;}
 
   /* ---------- toolbar: stars, tempo, mic ---------- */
   .songbar{display:flex; align-items:center; gap:10px; padding:4px 2px 12px; flex-wrap:wrap;}
-  #star-total{font-family:var(--display); font-size:1.3rem; background:var(--card); border-radius:999px;
-    padding:8px 16px; box-shadow:var(--shadow);}
+  #star-total{font-family:var(--display); font-size:1.3rem; background:var(--card); border:var(--edge);
+    border-radius:999px; padding:8px 16px; box-shadow:var(--shadow); transition:transform .1s var(--pop);}
+  #star-total:active{transform:scale(.95) translateY(2px);}
   .toggle-group{display:flex; gap:6px; margin-left:auto;}
-  .toggle{font-size:1.4rem; border:3px solid rgba(51,48,46,.12); background:var(--card); border-radius:16px;
-    padding:8px 14px; cursor:pointer;}
+  .toggle{font-size:1.4rem; border:var(--edge); background:var(--card); border-radius:16px;
+    padding:8px 14px; cursor:pointer; box-shadow:0 3px 0 rgba(51,48,46,.1); transition:transform .1s var(--pop);}
+  .toggle:active{transform:translateY(2px); box-shadow:0 1px 0 rgba(51,48,46,.1);}
   .toggle.on{border-color:var(--ink); background:var(--ink);}
-  .song-btn .badge{margin-left:auto; font-size:1.3rem;}
+  .song-btn{position:relative;}
+  .song-btn > span:nth-child(2){flex:1; min-width:0; padding-right:52px;}
+  .song-btn .badge{position:absolute; top:10px; right:14px; font-size:1.1rem; display:flex; flex-direction:column;
+    align-items:flex-end; gap:4px; white-space:nowrap; transform:rotate(4deg);}
 
   /* ---------- buddy + stage ---------- */
   #stage{display:flex; align-items:center; justify-content:center; gap:4vw;}
-  #buddy svg{width:clamp(72px,17vw,120px); height:auto; display:block;}
+  #buddy svg{width:clamp(80px,19vw,140px); height:auto; display:block;}
   #buddy.dance{animation:hop .3s;}
   @keyframes hop{40%{transform:translateY(-18px) rotate(-8deg) scale(1.1);}}
 
@@ -144,10 +191,11 @@
     padding:4px calc(16px + env(safe-area-inset-right)) 6px calc(16px + env(safe-area-inset-left));}
   #guide.hide{display:none;}
   #guide .face{flex:0 0 auto; line-height:0;}
-  #guide .face svg{width:52px; height:52px; display:block;}
+  #guide .face svg{width:48px; height:72px; display:block;}
   #guide.talk .face{animation:hop .4s;}
-  #guide .say{position:relative; background:var(--card); border-radius:18px; box-shadow:var(--shadow);
-    padding:10px 16px; font-family:var(--display); font-size:1rem; line-height:1.25; text-wrap:balance;}
+  #guide .say{position:relative; background:var(--card); border:var(--edge); border-radius:18px; box-shadow:var(--shadow);
+    padding:10px 16px; font-family:var(--display); font-size:1rem; line-height:1.25; text-wrap:balance;
+    transform:rotate(-.4deg);}
   #guide .say::before{content:''; position:absolute; left:-8px; top:50%; margin-top:-7px;
     border:7px solid transparent; border-right-color:var(--card);}
   #guide .say b{color:var(--cc,var(--coral));}
@@ -156,16 +204,24 @@
   #play .lyric .w{opacity:.35; transition:opacity .15s, transform .15s; display:inline-block;}
   #play .lyric .w.lit{opacity:1; transform:scale(1.08);}
   #progress{width:min(80%,420px); height:14px; border-radius:999px; background:rgba(51,48,46,.1); overflow:hidden;}
-  #progress i{display:block; height:100%; width:0; border-radius:999px; background:var(--em); transition:background .2s;}
+  #progress i{display:block; height:100%; width:0; border-radius:999px; background-color:var(--em);
+    transition:background-color .2s;
+    background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+    background-size:110px 100%; background-repeat:no-repeat; animation:shine 1.8s linear infinite;}
+  @keyframes shine{from{background-position:-110px 0;}to{background-position:calc(100% + 110px) 0;}}
 
   /* ---------- switch trainer ---------- */
   #switch{gap:10px; align-items:center;}
   .pair-row{display:flex; gap:8px; flex-wrap:wrap; justify-content:center;}
-  .pair-chip{font-family:var(--display); font-size:1.1rem; border:3px solid rgba(51,48,46,.12); background:var(--card);
-    border-radius:16px; padding:8px 14px; cursor:pointer; color:var(--soft);}
+  .pair-chip{font-family:var(--display); font-size:1.1rem; border:var(--edge); background:var(--card);
+    border-radius:16px; padding:8px 14px; cursor:pointer; color:var(--soft);
+    box-shadow:0 3px 0 rgba(51,48,46,.1); transition:transform .1s var(--pop);}
+  .pair-chip:active{transform:translateY(2px);}
   .pair-chip.on{border-color:var(--ink); color:var(--ink); box-shadow:var(--shadow);}
-  #sw-target{width:min(58vw,320px); border-radius:28px; background:var(--card); box-shadow:var(--shadow);
-    display:flex; align-items:center; justify-content:center; gap:14px; padding:12px; cursor:pointer;}
+  #sw-target{width:min(58vw,320px); border-radius:28px; background:var(--card); border:var(--edge); box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; gap:14px; padding:12px; cursor:pointer;
+    transition:transform .1s var(--pop);}
+  #sw-target:active{transform:scale(.97) translateY(2px);}
   #sw-target svg{height:min(30vh,200px);}
   #sw-target .letter{font-family:var(--display); font-size:clamp(3rem,14vw,5.5rem); line-height:1;}
   #sw-target.beat{animation:bounce .28s;}
@@ -190,7 +246,11 @@
   #stickers{overflow-y:auto;}
   #stickers h2{font-family:var(--display); margin:6px 0 10px;}
   .sticker-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; padding-bottom:12px;}
-  .sticker{background:var(--card); border-radius:20px; box-shadow:var(--shadow); padding:14px 10px; text-align:center;}
+  .sticker{background:var(--card); border:var(--edge); border-radius:20px; box-shadow:var(--shadow);
+    padding:14px 10px; text-align:center;}
+  .sticker:nth-child(3n){transform:rotate(-1.2deg);}
+  .sticker:nth-child(3n+1){transform:rotate(.9deg);}
+  .sticker:nth-child(3n+2){transform:rotate(-.4deg);}
   .sticker .ic{font-size:2.6rem;}
   .sticker .nm{font-family:var(--display); font-size:.95rem; margin-top:4px;}
   .sticker .how{color:var(--soft); font-size:.8rem; margin-top:2px;}
@@ -205,15 +265,16 @@
   body.concert{background:#241f33 radial-gradient(rgba(255,255,255,.06) 1.5px, transparent 1.5px); background-size:26px 26px;}
   body.concert header h1, body.concert #play .lyric, body.concert #count{color:#fff;}
   #crowd-row{display:flex; gap:2px; justify-content:center; min-height:0;}
-  #crowd-row svg{width:44px; height:44px;}
+  #crowd-row svg{width:38px; height:57px;}
   #crowd-row.rock svg{animation:hop .55s infinite;}
   #crowd-row.rock svg:nth-child(2n){animation-delay:.28s;}
 
   /* ---------- jam builder + recorder ---------- */
   #builder{display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding-bottom:10px;}
   #builder .lbl{font-family:var(--display); font-size:1rem; color:var(--soft);}
-  .slot{width:58px; height:58px; border:none; border-radius:16px; font-family:var(--display); font-size:1.4rem;
-    color:#fff; background:rgba(51,48,46,.18); cursor:pointer; box-shadow:var(--shadow);}
+  .slot{width:58px; height:58px; border:3px dashed var(--ink); border-radius:16px; font-family:var(--display); font-size:1.4rem;
+    color:var(--ink); background:rgba(255,255,255,.5); cursor:pointer; box-shadow:var(--shadow);}
+  .slot.set{border-style:solid; color:#fff;}
   #build-play{font-size:1.1rem; padding:12px 20px;}
   #rec-row{display:flex; gap:8px; align-items:center; padding:10px 0 0;}
   #rec-row .toggle{font-family:var(--display); font-size:1.05rem;}
@@ -221,9 +282,49 @@
   @keyframes blink{50%{opacity:.55;}}
   #rec-play:disabled{opacity:.4;}
 
+  /* ---------- tuner ---------- */
+  #tuner{align-items:center; gap:14px; justify-content:center;}
+  #tune-strings{display:flex; gap:10px;}
+  #needle-wrap{width:min(70vw,340px); height:150px; position:relative; background:var(--card);
+    border:var(--edge); border-radius:24px 24px 10px 10px; box-shadow:var(--shadow); overflow:hidden;}
+  #needle-wrap::before{content:''; position:absolute; left:50%; top:8px; bottom:8px; width:3px;
+    margin-left:-1.5px; background:rgba(51,48,46,.15); border-radius:2px;}
+  #needle{position:absolute; left:50%; bottom:8px; width:7px; height:118px; background:var(--coral);
+    border-radius:4px; transform:translateX(-50%); transform-origin:bottom center; transition:transform .15s;}
+  #tune-msg{font-family:var(--display); font-size:1.4rem; min-height:2rem; text-align:center; text-wrap:balance;}
+  #tuner.good #needle-wrap{outline:6px solid var(--em);}
+  #tuner.good #needle{background:var(--em);}
+
+  /* ---------- strum school ---------- */
+  #strum{align-items:center; gap:14px; justify-content:center;}
+  #pat-display{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .pat-slot{width:54px; height:72px; border:var(--edge); border-radius:16px; background:var(--card);
+    display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:2rem;
+    box-shadow:var(--shadow); transition:transform .1s var(--pop);}
+  .pat-slot.dn{color:var(--em);} .pat-slot.up{color:var(--g);} .pat-slot.rest{opacity:.35;}
+  .pat-slot.lit{background:var(--ink); color:#fff; transform:scale(1.12) translateY(-3px);}
+  #pat-name{font-family:var(--display); font-size:1.25rem; text-align:center; text-wrap:balance;}
+
+  /* ---------- grown-up corner: save codes ---------- */
+  #grownup{margin-top:14px; padding-top:12px; border-top:3px dashed rgba(51,48,46,.12);}
+  #grownup .gu-title{font-family:var(--display); color:var(--soft); margin-bottom:8px;}
+  #save-code{width:100%; min-height:70px; border-radius:14px; border:3px solid rgba(51,48,46,.15);
+    padding:8px; font-size:.8rem; font-family:monospace; resize:vertical;
+    user-select:text; -webkit-user-select:text;}
+
   /* ---------- duet ---------- */
   #turn-tag{font-family:var(--display); font-size:1.2rem; min-height:1.6rem;}
   #turn-tag .you{color:var(--em);} #turn-tag .band{color:var(--g);}
+  /* ---------- critters are alive: bob, breathe, sway, blink ---------- */
+  .critter g{transform-box:fill-box;}
+  .critter .cr-head{animation:crBob 3s ease-in-out infinite; animation-delay:var(--cd,0s); transform-origin:50% 88%;}
+  .critter .cr-body{animation:crBreathe 3s ease-in-out infinite; animation-delay:var(--cd,0s); transform-origin:50% 100%;}
+  .critter .cr-inst{animation:crSway 3s ease-in-out infinite; animation-delay:var(--cd,0s); transform-origin:50% 20%;}
+  .critter .cr-eyes{animation:crBlink 4.6s linear infinite; animation-delay:var(--cd,0s); transform-origin:50% 50%;}
+  @keyframes crBob{50%{transform:rotate(2.5deg);}}
+  @keyframes crBreathe{50%{transform:scaleY(.965);}}
+  @keyframes crSway{50%{transform:rotate(-5deg);}}
+  @keyframes crBlink{0%,93%,100%{transform:scaleY(1);}95%,97.5%{transform:scaleY(.08);}}
   @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important;}}
 </style>
 
@@ -232,6 +333,7 @@
   <span class="dot" style="background:var(--c)"></span>
   <span class="dot" style="background:var(--g)"></span>
   <h1>Loog Buddy</h1>
+  <span id="header-band" aria-hidden="true"></span>
 </header>
 
 <div id="guide" role="button" aria-label="ask your buddy for a tip">
@@ -249,6 +351,8 @@
         <button class="strum-btn" id="strum-again">🎸 Strum!</button>
         <button class="toggle" id="mic-toggle-chords" aria-label="listen to me">🎤 Listen</button>
         <button class="toggle" id="ear-btn" aria-label="mystery chord game">👂 Mystery</button>
+        <button class="toggle" id="tune-btn" aria-label="tune your guitar">🎯 Tune</button>
+        <button class="toggle" id="tone-btn" aria-label="change guitar sound">🪵 Acoustic</button>
         <div id="chord-heard"></div>
       </div>
     </div>
@@ -290,7 +394,31 @@
   <section class="screen" id="stickers">
     <h2>🏆 Sticker Book</h2>
     <div class="sticker-grid" id="sticker-grid"></div>
+    <div id="grownup">
+      <div class="gu-title">🔐 Grown-up corner — save code (copy it somewhere safe, or paste one to restore)</div>
+      <textarea id="save-code" spellcheck="false" aria-label="save code"></textarea>
+      <div class="play-ctl">
+        <button class="toggle" id="code-make">📤 Make code</button>
+        <button class="toggle" id="code-load">📥 Load code</button>
+      </div>
+    </div>
     <div class="play-ctl"><button class="strum-btn" id="stickers-back">⬅ Back</button></div>
+  </section>
+
+  <!-- STRUM SCHOOL -->
+  <section class="screen" id="strum">
+    <div class="pair-row" id="pat-row"></div>
+    <div id="pat-display"></div>
+    <div id="pat-name"></div>
+    <div class="play-ctl"><button class="strum-btn" id="pat-go">🥁 Try it!</button></div>
+  </section>
+
+  <!-- TUNER -->
+  <section class="screen" id="tuner">
+    <div id="tune-strings"></div>
+    <div id="needle-wrap"><div id="needle"></div></div>
+    <div id="tune-msg">Play one string, nice and slow…</div>
+    <div class="play-ctl"><button class="strum-btn" id="tuner-back">⬅ Back</button></div>
   </section>
 
   <!-- SWITCH TRAINER -->
@@ -324,10 +452,11 @@
 </main>
 
 <nav>
-  <button id="tab-chords" class="on">🎨 Chords</button>
-  <button id="tab-songs">🎵 Songs</button>
-  <button id="tab-switch">🔁 Switch</button>
-  <button id="tab-jam">🤘 Jam</button>
+  <button id="tab-chords" class="on" style="--tc:#FFB528"><span class="ico">🎨</span>Chords</button>
+  <button id="tab-songs" style="--tc:#3EC98B"><span class="ico">🎵</span>Songs</button>
+  <button id="tab-switch" style="--tc:#4FA8F6"><span class="ico">🔁</span>Switch</button>
+  <button id="tab-strum" style="--tc:#F1568C"><span class="ico">🖐</span>Strum</button>
+  <button id="tab-jam" style="--tc:#FF6B5E"><span class="ico">🤘</span>Jam</button>
 </nav>
 
 <script>
@@ -344,20 +473,73 @@ const OPEN_FREQ = [196.00, 246.94, 329.63]; // G3 B3 E4
 /* ---------- audio: plucked-string synth ---------- */
 let ctx;
 function audio(){ if(!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)(); if(ctx.state==='suspended') ctx.resume(); return ctx; }
+/* Karplus-Strong plucked string: noise burst circulating through an averaging
+   delay line. Rendered once per pitch into a buffer and cached — playback is free. */
+const ksCache=new Map();
+function ksBuffer(freq, damp=0.996){
+  const key=Math.round(freq)+':'+damp;
+  if(ksCache.has(key)) return ksCache.get(key);
+  const ac=audio(), sr=ac.sampleRate, N=Math.max(2,Math.round(sr/freq)), len=Math.floor(sr*1.5);
+  const buf=ac.createBuffer(1,len,sr), d=buf.getChannelData(0), ring=new Float32Array(N);
+  for(let i=0;i<N;i++) ring[i]=Math.random()*2-1;
+  let idx=0;
+  const k=damp*0.5;
+  for(let i=0;i<len;i++){
+    const cur=ring[idx], nxt=ring[(idx+1)%N];
+    d[i]=cur; ring[idx]=k*(cur+nxt);
+    idx=(idx+1)%N;
+  }
+  ksCache.set(key,buf); return buf;
+}
+
+/* ---------- guitar tones: same string, different amp ---------- */
+const TONES=[
+  {id:'acoustic', label:'🪵 Acoustic'},
+  {id:'clean',    label:'🎸 Clean'},
+  {id:'crunch',   label:'🤘 Heavy'},
+];
+let toneIdx=0;   // hydrated from LB once storage loads (LB is declared further down)
+let distCurve=null;
+function dist(){
+  if(!distCurve){
+    distCurve=new Float32Array(1024);
+    for(let i=0;i<1024;i++){ const x=i/511.5-1; distCurve[i]=Math.tanh(5.5*x); }
+  }
+  return distCurve;
+}
 function pluck(freq, when, vol=0.5){
-  const ac=audio(), o=ac.createOscillator(), o2=ac.createOscillator(), g=ac.createGain(), f=ac.createBiquadFilter();
-  o.type='triangle'; o.frequency.value=freq;
-  o2.type='sine'; o2.frequency.value=freq*2; // a little shimmer
-  f.type='lowpass'; f.frequency.setValueAtTime(freq*6,when); f.frequency.exponentialRampToValueAtTime(freq*1.5,when+1.2);
-  g.gain.setValueAtTime(0.0001,when); g.gain.exponentialRampToValueAtTime(vol,when+0.008);
-  g.gain.exponentialRampToValueAtTime(0.0001,when+1.6);
-  o.connect(f); o2.connect(f); f.connect(g); g.connect(ac.destination);
-  o.start(when); o2.start(when); o.stop(when+1.7); o2.stop(when+1.7);
+  const ac=audio(); when = when ?? ac.currentTime;
+  const tone=TONES[toneIdx].id;
+  const s=ac.createBufferSource(), g=ac.createGain(), f=ac.createBiquadFilter();
+  f.type='lowpass';
+  if(tone==='crunch'){
+    s.buffer=ksBuffer(freq, 0.9985);           // electric strings ring longer
+    const pre=ac.createGain(); pre.gain.value=11;
+    const ws=ac.createWaveShaper(); ws.curve=dist(); ws.oversample='2x';
+    s.connect(pre); pre.connect(ws); ws.connect(f);
+    f.frequency.value=2600; g.gain.value=vol*0.42;
+  }else if(tone==='clean'){
+    s.buffer=ksBuffer(freq, 0.9985);
+    s.connect(f); f.frequency.value=4500; g.gain.value=vol*0.9;
+  }else{
+    s.buffer=ksBuffer(freq);
+    s.connect(f); f.frequency.value=Math.min(8000,freq*10); g.gain.value=vol*1.1;
+  }
+  f.connect(g); g.connect(ac.destination);
+  s.start(when); s.stop(when+1.55);
 }
 function strum(name, when){
   const ac=audio(); when = when ?? ac.currentTime;
   try{ matchCooldownUntil=performance.now()+1800; }catch{}  // don't let the matcher hear the app itself
   CHORDS[name].frets.forEach((fr,i)=> pluck(OPEN_FREQ[i]*Math.pow(2,fr/12), when + i*0.06, 0.42));
+}
+/* up-strum: high string first, lighter — the "up" half of a strumming pattern */
+function strumUp(name, when){
+  const ac=audio(); when = when ?? ac.currentTime;
+  try{ matchCooldownUntil=performance.now()+1800; }catch{}
+  const frets=CHORDS[name].frets;
+  for(let i=frets.length-1;i>=0;i--)
+    pluck(OPEN_FREQ[i]*Math.pow(2,frets[i]/12), when+(frets.length-1-i)*0.035, 0.2);
 }
 
 /* ---------- backing band: drums + bass, synthesised so it works offline ---------- */
@@ -488,9 +670,10 @@ const SONGS=[
           ['G',3,'Happy birthday dear'],['C',3,'buddy!'],['D',3,'Happy birthday to'],['G',3,'you!']]},
  /* real-song chord charts — he sings the words, we hold up the chords */
  {title:'Country Roads', emoji:'🏔️', sub:'G, Em, D and C — a real classic!', bpm:80,
-  events:[['G',8,'🎤 verse — sing it slow…'],['Em',8,'stay gentle…'],['D',8,'take your time…'],['C',4,'…and back'],['G',4,'home!'],
-          ['G',4,'🌟 CHORUS — sing it loud!'],['D',4,'big strums!'],['Em',4,'keep going!'],['C',4,'don’t stop!'],
-          ['G',4,'almost home…'],['D',4,'nearly…'],['C',4,'sloooow down…'],['G',4,'big finish! 🏔️']]},
+  events:[['G',8,'🎤 Almost Heaven'],['Em',8,'West Virginia'],['D',8,'Blue Ridge Mountains'],['C',8,'Shenandoah River'],
+          ['G',8,'Life is old there…'],['Em',8,'older than the trees…'],['D',8,'younger than the mountains…'],['C',4,'growing like a'],['G',4,'breeze'],
+          ['G',8,'Country Roads!'],['D',8,'take me home'],['Em',8,'to the place'],['C',8,'I belong!'],
+          ['G',8,'West Virginia'],['D',8,'Mountain Mama'],['C',8,'Take me home'],['G',8,'Country Roads! 🏔️']]},
  {title:'Walk of Life', emoji:'🕺', sub:'G, C and D — the bouncy one!', bpm:96,
   events:[['G',4,'🎹 the famous riff!'],['G',4,'keep it bouncing!'],['C',4,'change!'],['D',4,'and again!'],
           ['G',4,'back to the riff!'],['G',4,'you got this!'],['C',4,'change!'],['D',4,'and again!'],
@@ -499,56 +682,135 @@ const SONGS=[
 /* ---------- progress: stars, streaks, animal band (localStorage) ---------- */
 /* ---------- the band: parametric critters, drawn as SVG ---------- */
 const CAST=[
- {name:'Milo',  fur:'#B98A5E', light:'#FFE2B8', dark:'#9A6F45', ears:'round',  joins:'I brought the bananas AND the beat!'},
- {name:'Rosie', fur:'#F0A64E', light:'#FFF1D6', dark:'#C97F2E', ears:'floppy', joins:'Did somebody say STRUM?'},
- {name:'Jazz',  fur:'#9B6DE0', light:'#EBDCFF', dark:'#7A4FC0', ears:'pointy', extra:'whiskers', joins:'I only play the smooth ones.'},
- {name:'Hopper',fur:'#3EC98B', light:'#D4F7E6', dark:'#2AA06C', ears:'none',   eyes:'top', joins:'I hop on every beat. Every one!'},
- {name:'Rex',   fur:'#FFB528', light:'#FFE7B0', dark:'#E09612', ears:'round',  extra:'mane', mane:'#F0851C', joins:'LOUD is my favourite chord.'},
- {name:'Bao',   fur:'#FFFFFF', light:'#F3EFE6', dark:'#DCD5C6', ears:'dark',   extra:'patches', joins:'Slow and steady wins the song.'},
- {name:'Pip',   fur:'#FF8A4C', light:'#FFF1D6', dark:'#D96A2E', ears:'pointy', extra:'tufts', joins:'I know a shortcut to every chord.'},
- {name:'Blue',  fur:'#A9B4C0', light:'#E6EBF0', dark:'#8794A2', ears:'big',    nose:'#5A6570', joins:'Woke up just for this jam.'},
- {name:'Star',  fur:'#FFD9EC', light:'#FFF0F8', dark:'#F1A8CE', ears:'tall',   extra:'horn', mane:'#9B6DE0', joins:'Sparkles included, free of charge!'},
- {name:'Ollie', fur:'#4FA8F6', light:'#CFE6FF', dark:'#2E82CC', ears:'none',   extra:'tentacles', joins:'Eight arms. Eight guitars. Let us go.'},
+ {name:'Milo',  fur:'#B98A5E', light:'#FFE2B8', dark:'#9A6F45', ears:'round',  inst:'guitar', joins:'I brought the bananas AND the beat!'},
+ {name:'Rosie', fur:'#F0A64E', light:'#FFF1D6', dark:'#C97F2E', ears:'floppy', inst:'tamb',   joins:'Did somebody say STRUM?'},
+ {name:'Jazz',  fur:'#9B6DE0', light:'#EBDCFF', dark:'#7A4FC0', ears:'pointy', extra:'whiskers', inst:'keys', joins:'I only play the smooth ones.'},
+ {name:'Hopper',fur:'#3EC98B', light:'#D4F7E6', dark:'#2AA06C', ears:'none',   eyes:'top', inst:'shaker', joins:'I hop on every beat. Every one!'},
+ {name:'Rex',   fur:'#FFB528', light:'#FFE7B0', dark:'#E09612', ears:'round',  extra:'mane', mane:'#F0851C', inst:'drum', joins:'LOUD is my favourite chord.'},
+ {name:'Bao',   fur:'#FFFFFF', light:'#F3EFE6', dark:'#DCD5C6', ears:'dark',   extra:'patches', inst:'bass', joins:'Slow and steady wins the song.'},
+ {name:'Pip',   fur:'#FF8A4C', light:'#FFF1D6', dark:'#D96A2E', ears:'pointy', extra:'tufts', inst:'guitar', joins:'I know a shortcut to every chord.'},
+ {name:'Blue',  fur:'#A9B4C0', light:'#E6EBF0', dark:'#8794A2', ears:'big',    nose:'#5A6570', inst:'mic', joins:'Woke up just for this jam.'},
+ {name:'Star',  fur:'#FFD9EC', light:'#FFF0F8', dark:'#F1A8CE', ears:'tall',   extra:'horn', mane:'#9B6DE0', inst:'trumpet', joins:'Sparkles included, free of charge!'},
+ {name:'Ollie', fur:'#4FA8F6', light:'#CFE6FF', dark:'#2E82CC', ears:'none',   extra:'tentacles', inst:'drum', joins:'Eight arms. Eight guitars. Let us go.'},
 ];
+/* each bandmate's instrument, held in front of the tummy */
+function instrumentSVG(kind, ink){
+  const O=`stroke="${ink}" stroke-width="2" stroke-linejoin="round"`;
+  switch(kind){
+    case 'guitar': return `<g transform="rotate(-20 50 120)">
+      <rect x="47" y="86" width="6" height="34" rx="3" fill="#7A4A28" ${O}/>
+      <rect x="43" y="83" width="14" height="7" rx="3" fill="${ink}"/>
+      <ellipse cx="50" cy="127" rx="14" ry="12" fill="#E8A24D" ${O}/>
+      <circle cx="50" cy="125" r="4.5" fill="${ink}"/>
+      <line x1="50" y1="104" x2="50" y2="122" stroke="#fff" stroke-width="2"/></g>`;
+    case 'bass': return `<g transform="rotate(-20 50 120)">
+      <rect x="47" y="78" width="6" height="42" rx="3" fill="#5A6570" ${O}/>
+      <rect x="43" y="75" width="14" height="7" rx="3" fill="${ink}"/>
+      <ellipse cx="50" cy="128" rx="13" ry="11" fill="#4FA8F6" ${O}/>
+      <circle cx="50" cy="126" r="4" fill="${ink}"/></g>`;
+    case 'drum': return `
+      <rect x="35" y="114" width="30" height="20" rx="4" fill="#FF6B5E" ${O}/>
+      <ellipse cx="50" cy="114" rx="15" ry="5.5" fill="#FFF1D6" ${O}/>
+      <line x1="36" y1="99" x2="46" y2="111" stroke="#7A4A28" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="64" y1="99" x2="54" y2="111" stroke="#7A4A28" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="36" cy="99" r="3" fill="#FFB528" ${O}/><circle cx="64" cy="99" r="3" fill="#FFB528" ${O}/>`;
+    case 'keys': return `
+      <rect x="30" y="112" width="40" height="18" rx="4" fill="${ink}"/>
+      <rect x="33" y="115" width="34" height="12" rx="2" fill="#fff"/>
+      <rect x="38" y="115" width="4" height="7" fill="${ink}"/>
+      <rect x="48" y="115" width="4" height="7" fill="${ink}"/>
+      <rect x="58" y="115" width="4" height="7" fill="${ink}"/>`;
+    case 'mic': return `<g transform="rotate(14 50 118)">
+      <rect x="47" y="112" width="6" height="24" rx="3" fill="#8794A2" ${O}/>
+      <circle cx="50" cy="106" r="8.5" fill="#FF6B5E" ${O}/>
+      <circle cx="47" cy="103" r="2.5" fill="#fff" opacity=".6"/></g>`;
+    case 'tamb': return `<g transform="rotate(-12 50 120)">
+      <circle cx="50" cy="120" r="13" fill="none" stroke="#FF6B5E" stroke-width="6"/>
+      <circle cx="50" cy="120" r="16" fill="none" stroke="${ink}" stroke-width="1.5"/>
+      <circle cx="50" cy="120" r="10" fill="none" stroke="${ink}" stroke-width="1.5"/>
+      <circle cx="40" cy="112" r="2.5" fill="#FFB528" ${O}/><circle cx="50" cy="107" r="2.5" fill="#FFB528" ${O}/>
+      <circle cx="60" cy="112" r="2.5" fill="#FFB528" ${O}/><circle cx="63" cy="123" r="2.5" fill="#FFB528" ${O}/>
+      <circle cx="37" cy="123" r="2.5" fill="#FFB528" ${O}/></g>`;
+    case 'shaker': return `
+      <g transform="rotate(-22 42 116)"><rect x="40" y="116" width="5" height="13" rx="2.5" fill="#7A4A28" ${O}/>
+        <ellipse cx="42.5" cy="109" rx="6.5" ry="8.5" fill="#FF6B5E" ${O}/></g>
+      <g transform="rotate(22 58 116)"><rect x="55" y="116" width="5" height="13" rx="2.5" fill="#7A4A28" ${O}/>
+        <ellipse cx="57.5" cy="109" rx="6.5" ry="8.5" fill="#FFB528" ${O}/></g>`;
+    case 'trumpet': return `<g transform="rotate(-8 50 118)">
+      <rect x="32" y="113" width="26" height="7" rx="3.5" fill="#FFB528" ${O}/>
+      <path d="M58 108 L71 102 L71 130 L58 124 Z" fill="#FFB528" ${O}/>
+      <circle cx="39" cy="110" r="2.2" fill="${ink}"/><circle cx="45" cy="110" r="2.2" fill="${ink}"/>
+      <circle cx="51" cy="110" r="2.2" fill="${ink}"/></g>`;
+    default: return '';
+  }
+}
 function critterSVG(i,size,sleepy){
   const c=CAST[i%CAST.length], ink='#33302E', nose=c.nose||ink;
-  let s='', ears='';
-  if(c.ears==='round')  ears=`<circle cx="24" cy="36" r="13" fill="${c.fur}"/><circle cx="76" cy="36" r="13" fill="${c.fur}"/>
+  const O=`stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"`;
+  let ears='';
+  if(c.ears==='round')  ears=`<circle cx="24" cy="36" r="13" fill="${c.fur}" ${O}/><circle cx="76" cy="36" r="13" fill="${c.fur}" ${O}/>
       <circle cx="24" cy="36" r="7" fill="${c.light}"/><circle cx="76" cy="36" r="7" fill="${c.light}"/>`;
-  if(c.ears==='big')    ears=`<circle cx="19" cy="40" r="17" fill="${c.fur}"/><circle cx="81" cy="40" r="17" fill="${c.fur}"/>
+  if(c.ears==='big')    ears=`<circle cx="19" cy="40" r="17" fill="${c.fur}" ${O}/><circle cx="81" cy="40" r="17" fill="${c.fur}" ${O}/>
       <circle cx="19" cy="40" r="10" fill="${c.light}"/><circle cx="81" cy="40" r="10" fill="${c.light}"/>`;
   if(c.ears==='dark')   ears=`<circle cx="24" cy="32" r="12" fill="${ink}"/><circle cx="76" cy="32" r="12" fill="${ink}"/>`;
-  if(c.ears==='pointy') ears=`<path d="M26 42 L28 12 L52 32 Z" fill="${c.fur}"/><path d="M74 42 L72 12 L48 32 Z" fill="${c.fur}"/>
+  if(c.ears==='pointy') ears=`<path d="M26 42 L28 12 L52 32 Z" fill="${c.fur}" ${O}/><path d="M74 42 L72 12 L48 32 Z" fill="${c.fur}" ${O}/>
       <path d="M31 38 L32 21 L45 32 Z" fill="${c.light}"/><path d="M69 38 L68 21 L55 32 Z" fill="${c.light}"/>`;
-  if(c.ears==='floppy') ears=`<ellipse cx="18" cy="60" rx="11" ry="20" fill="${c.dark}"/><ellipse cx="82" cy="60" rx="11" ry="20" fill="${c.dark}"/>`;
-  if(c.ears==='tall')   ears=`<ellipse cx="34" cy="24" rx="8" ry="17" fill="${c.fur}" transform="rotate(-12 34 24)"/>
-      <ellipse cx="66" cy="24" rx="8" ry="17" fill="${c.fur}" transform="rotate(12 66 24)"/>`;
+  if(c.ears==='floppy') ears=`<ellipse cx="18" cy="60" rx="11" ry="20" fill="${c.dark}" ${O}/><ellipse cx="82" cy="60" rx="11" ry="20" fill="${c.dark}" ${O}/>`;
+  if(c.ears==='tall')   ears=`<ellipse cx="34" cy="24" rx="8" ry="17" fill="${c.fur}" ${O} transform="rotate(-12 34 24)"/>
+      <ellipse cx="66" cy="24" rx="8" ry="17" fill="${c.fur}" ${O} transform="rotate(12 66 24)"/>`;
 
+  /* body: legs (or tentacles), stubby arms, tummy */
+  let body='';
+  if(c.extra==='tentacles'){
+    for(let k=0;k<5;k++) body+=`<ellipse cx="${24+k*13}" cy="${138+(k%2?5:0)}" rx="7" ry="12" fill="${c.dark}" ${O}/>`;
+  }else{
+    body+=`<rect x="30" y="116" width="14" height="26" rx="7" fill="${c.dark}" ${O}/>
+        <rect x="56" y="116" width="14" height="26" rx="7" fill="${c.dark}" ${O}/>
+        <ellipse cx="36" cy="143" rx="10" ry="5" fill="${c.dark}" ${O}/>
+        <ellipse cx="64" cy="143" rx="10" ry="5" fill="${c.dark}" ${O}/>`;
+  }
+  body+=`<ellipse cx="21" cy="102" rx="8" ry="16" fill="${c.fur}" ${O} transform="rotate(20 21 102)"/>
+      <ellipse cx="79" cy="102" rx="8" ry="16" fill="${c.fur}" ${O} transform="rotate(-20 79 102)"/>
+      <ellipse cx="50" cy="107" rx="27" ry="30" fill="${c.fur}" ${O}/>
+      <ellipse cx="50" cy="113" rx="16" ry="20" fill="${c.light}"/>`;
+
+  /* head, with the eyes in their own group so they can blink */
+  let head='';
   if(c.extra==='mane'){ for(let k=0;k<11;k++){ const a=k/11*Math.PI*2;
-      s+=`<circle cx="${(50+Math.cos(a)*32).toFixed(1)}" cy="${(56+Math.sin(a)*32).toFixed(1)}" r="12" fill="${c.mane}"/>`; } }
-  if(c.extra==='tentacles') for(let k=0;k<5;k++)
-      s+=`<ellipse cx="${22+k*14}" cy="${88+(k%2?4:0)}" rx="7" ry="11" fill="${c.dark}"/>`;
-  if(c.extra==='horn') s+=`<path d="M43 30 L50 2 L57 30 Z" fill="#FFD84D"/><path d="M45 21 L55 21" stroke="#E0A800" stroke-width="3"/>`;
-  s+=ears;
-  s+=`<circle cx="50" cy="56" r="28" fill="${c.fur}"/>`;
-  if(c.extra==='horn') s+=`<path d="M28 42 Q34 24 46 32 Q52 20 62 30 Q70 24 73 40"
+      head+=`<circle cx="${(50+Math.cos(a)*32).toFixed(1)}" cy="${(56+Math.sin(a)*32).toFixed(1)}" r="12" fill="${c.mane}"/>`; } }
+  if(c.extra==='horn') head+=`<path d="M43 30 L50 2 L57 30 Z" fill="#FFD84D" ${O}/><path d="M45 21 L55 21" stroke="#E0A800" stroke-width="3"/>`;
+  head+=ears;
+  head+=`<circle cx="50" cy="56" r="28" fill="${c.fur}" ${O}/>`;
+  if(c.extra==='horn') head+=`<path d="M28 42 Q34 24 46 32 Q52 20 62 30 Q70 24 73 40"
       stroke="${c.mane}" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-  if(c.extra==='tufts') s+=`<circle cx="20" cy="60" r="9" fill="${c.light}"/><circle cx="80" cy="60" r="9" fill="${c.light}"/>`;
-  if(c.extra==='patches') s+=`<ellipse cx="39" cy="52" rx="9" ry="11" fill="${ink}" transform="rotate(-18 39 52)"/>
+  if(c.extra==='tufts') head+=`<circle cx="20" cy="60" r="9" fill="${c.light}"/><circle cx="80" cy="60" r="9" fill="${c.light}"/>`;
+  if(c.extra==='patches') head+=`<ellipse cx="39" cy="52" rx="9" ry="11" fill="${ink}" transform="rotate(-18 39 52)"/>
       <ellipse cx="61" cy="52" rx="9" ry="11" fill="${ink}" transform="rotate(18 61 52)"/>`;
-  s+=`<ellipse cx="50" cy="68" rx="17" ry="13" fill="${c.light}"/>`;
-  if(c.eyes==='top') s+=`<circle cx="31" cy="27" r="14" fill="${c.fur}"/><circle cx="69" cy="27" r="14" fill="${c.fur}"/>
-      <circle cx="31" cy="27" r="9" fill="#fff"/><circle cx="69" cy="27" r="9" fill="#fff"/>
-      <circle cx="32" cy="28" r="4.5" fill="${ink}"/><circle cx="70" cy="28" r="4.5" fill="${ink}"/>`;
-  else if(sleepy) s+=`<path d="M35 51 Q40 56 45 51 M55 51 Q60 56 65 51" stroke="${ink}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
-  else s+=`<circle cx="40" cy="51" r="5" fill="${ink}"/><circle cx="60" cy="51" r="5" fill="${ink}"/>
-      <circle cx="41.8" cy="49.2" r="1.9" fill="#fff"/><circle cx="61.8" cy="49.2" r="1.9" fill="#fff"/>`;
-  s+=`<ellipse cx="50" cy="62" rx="5.5" ry="4" fill="${nose}"/>
+  head+=`<ellipse cx="50" cy="68" rx="17" ry="13" fill="${c.light}"/>
+      <circle cx="30" cy="63" r="4.5" fill="#FF7B8F" opacity=".35"/><circle cx="70" cy="63" r="4.5" fill="#FF7B8F" opacity=".35"/>`;
+  let eyes='';
+  if(c.eyes==='top'){
+    head+=`<circle cx="31" cy="27" r="14" fill="${c.fur}" ${O}/><circle cx="69" cy="27" r="14" fill="${c.fur}" ${O}/>
+      <circle cx="31" cy="27" r="9" fill="#fff"/><circle cx="69" cy="27" r="9" fill="#fff"/>`;
+    eyes=`<circle cx="32" cy="28" r="4.5" fill="${ink}"/><circle cx="70" cy="28" r="4.5" fill="${ink}"/>
+      <circle cx="33.5" cy="26.5" r="1.6" fill="#fff"/><circle cx="71.5" cy="26.5" r="1.6" fill="#fff"/>`;
+  }else if(sleepy){
+    eyes=`<path d="M35 51 Q40 56 45 51 M55 51 Q60 56 65 51" stroke="${ink}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+  }else{
+    eyes=`<circle cx="40" cy="51" r="5.5" fill="${ink}"/><circle cx="60" cy="51" r="5.5" fill="${ink}"/>
+      <circle cx="42" cy="49" r="2.1" fill="#fff"/><circle cx="62" cy="49" r="2.1" fill="#fff"/>
+      <circle cx="38.6" cy="52.8" r="1" fill="#fff" opacity=".7"/><circle cx="58.6" cy="52.8" r="1" fill="#fff" opacity=".7"/>`;
+  }
+  head+=`<ellipse cx="50" cy="62" rx="5.5" ry="4" fill="${nose}"/>
       <path d="M41 70 Q50 78 59 70" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
-  if(c.extra==='whiskers') s+=`<path d="M22 64 L36 66 M22 72 L36 70 M78 64 L64 66 M78 72 L64 70"
+  if(c.extra==='whiskers') head+=`<path d="M22 64 L36 66 M22 72 L36 70 M78 64 L64 66 M78 72 L64 70"
       stroke="${c.dark}" stroke-width="2.5" stroke-linecap="round"/>`;
-  const dim=size?`width="${size}" height="${size}"`:'';
-  return `<svg viewBox="0 0 100 100" ${dim} role="img" aria-label="${c.name}">${s}</svg>`;
+
+  const dim=size?`width="${Math.round(size*2/3)}" height="${size}"`:'';
+  return `<svg viewBox="0 0 100 150" ${dim} class="critter" style="--cd:${(i%6)*0.45}s" role="img" aria-label="${c.name}">
+    <g class="cr-body">${body}</g>
+    <g class="cr-inst">${instrumentSVG(c.inst, ink)}</g>
+    <g class="cr-head">${head}<g class="cr-eyes">${eyes}</g></g></svg>`;
 }
 const STARS_PER_ANIMAL=3;
 let LB;
@@ -556,6 +818,7 @@ try{ LB=JSON.parse(localStorage.getItem('loogbuddy'))||{}; }catch{ LB={}; }
 LB.total=LB.total||0; LB.done=LB.done||{}; LB.animals=LB.animals||1;
 LB.streak=LB.streak||0; LB.lastDay=LB.lastDay||''; LB.earBest=LB.earBest||0;
 LB.concerts=LB.concerts||0; LB.built=LB.built||0; LB.recorded=LB.recorded||0;
+toneIdx=LB.toneIdx||0;
 function saveLB(){ try{ localStorage.setItem('loogbuddy',JSON.stringify(LB)); }catch{} }
 
 /* ---------- practice streak: the buddy is the pet ---------- */
@@ -581,11 +844,15 @@ function refreshBar(){
   document.getElementById('streak-pill').textContent=`🔥 ${LB.streak}`;
   document.getElementById('band-shelf').innerHTML=
     CAST.slice(0,LB.animals).map((c,i)=>critterSVG(i,32)).join('');
+  document.getElementById('header-band').innerHTML=
+    CAST.slice(0,LB.animals).map((c,i)=>critterSVG(i,38)).join('');
 }
 
 const list=document.getElementById('song-list');
-/* unlock ladder: finishing a song once opens the next one */
-function unlocked(i){ return i===0 || (LB.done[SONGS[i-1].title]||0)>0; }
+/* unlock ladder: finishing a song once opens the next one.
+   LADDER=false leaves everything open (current setting). */
+const LADDER=false;
+function unlocked(i){ return !LADDER || i===0 || (LB.done[SONGS[i-1].title]||0)>0; }
 /* slow-mo learn mode: new songs run at 70% and speed up each finish until full tempo */
 function mastery(song){ return Math.min(1, 0.7 + 0.1*Math.min(3, LB.done[song.title]||0)); }
 function renderSongs(){
@@ -657,6 +924,7 @@ function trackMic(){
   micLevel=Math.sqrt(sum/micData.length);
   micBase=micBase*0.995+micLevel*0.005;   // slow-moving room noise floor
   chordMatchTick();
+  tunerTick();
   micLoop=requestAnimationFrame(trackMic);
 }
 
@@ -784,7 +1052,8 @@ function runProgress(startAt, endAt){
   progFill.style.width='0%'; progRAF=requestAnimationFrame(tick);
 }
 function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active'); updateGuide(id); }
+  document.getElementById(id).classList.add('active');
+  document.body.dataset.screen=id; updateGuide(id); }
 
 const buddyEl=document.getElementById('buddy'), turnTag=document.getElementById('turn-tag');
 /* idx can be a SONGS index or a whole song object (song builder). opts: {concert:true} */
@@ -798,6 +1067,8 @@ function startSong(idx, opts={}){
   lyricEl.textContent=song.title; bLetter.textContent=''; bubble.style.background='#E8E0D0';
   nextText.textContent=''; nextDiag.innerHTML=''; playDiag.innerHTML=''; turnTag.textContent='';
   buddyEl.innerHTML=critterSVG(buddyIdx());
+  document.querySelector('#bubble .strum').textContent =
+    PATTERNS[patternIdx].id==='hold' ? 'STRUM!' : PATTERNS[patternIdx].label;
   const crowdRow=document.getElementById('crowd-row');
   crowdRow.innerHTML = concert ? CAST.slice(0,LB.animals).map((c,i)=>critterSVG(i,44)).join('') : '';
   crowdRow.classList.toggle('rock',concert);
@@ -814,7 +1085,7 @@ function startSong(idx, opts={}){
     const mine = duet ? Math.floor(t/4)%2===1 : true;   // duet: band demos the first 4 beats, then trade
     timers.push(setTimeout(()=>{
       bubble.style.background=CHORDS[chord].color; bLetter.textContent=chord;
-      progFill.style.background=CHORDS[chord].color;
+      progFill.style.backgroundColor=CHORDS[chord].color;
       renderLyric(lyric, beats*beatMs);
       if(!concert){
         playDiag.innerHTML=chordSVG(chord);
@@ -825,9 +1096,9 @@ function startSong(idx, opts={}){
       if(duet) turnTag.innerHTML = mine ? '<span class="you">🫵 YOUR turn!</span>' : '<span class="band">🎺 band’s turn</span>';
       bubble.classList.remove('beat'); void bubble.offsetWidth; bubble.classList.add('beat');
       buddyEl.classList.remove('dance'); void buddyEl.offsetWidth; buddyEl.classList.add('dance');
-      if(duet && !mine) strum(chord);                   // band's half: app plays
-      else if(micOn) listenForStrum(hitBox, chord);     // his guitar is the sound
-      else if(!duet) strum(chord);                      // duet kid-half without mic: he taps the bubble
+      if(duet && !mine) playPattern(chord, beats, beatMs);  // band's half: app plays
+      else if(micOn) listenForStrum(hitBox, chord);         // his guitar is the sound
+      else if(!duet) playPattern(chord, beats, beatMs);     // duet kid-half without mic: he taps the bubble
     }, startAt + t*beatMs));
     t += beats;
   });
@@ -985,6 +1256,165 @@ swTarget.addEventListener('pointerdown',()=>{
     swTarget.classList.remove('good'); void swTarget.offsetWidth; swTarget.classList.add('good'); }
 });
 
+/* ---------- strumming patterns: steps are half-beat slots, D=down U=up, cycling ---------- */
+const PATTERNS=[
+  {id:'hold',  label:'—',        name:'One big strum — just strum when the chord changes', steps:null},
+  {id:'down',  label:'↓',        name:'Steady — one down every beat',                      steps:['D',null]},
+  {id:'bounce',label:'↓↑',       name:'Bouncy — down AND up, every beat',                  steps:['D','U']},
+  {id:'folk',  label:'↓ ↓↑',     name:'Folk — down… then down-up',                         steps:['D',null,'D','U']},
+  {id:'camp',  label:'↓ ↓↑ ↑↓↑', name:'Campfire — the famous one! Down, down-up, up-down-up', steps:['D',null,'D','U',null,'U','D','U']},
+  {id:'ska',   label:'(↑)',      name:'Sneaky ups — ONLY the in-between ups!',             steps:[null,'U']},
+];
+let patternIdx=Math.min(LB.patternIdx||0, PATTERNS.length-1);
+function playPattern(chord, beats, beatMs){
+  const p=PATTERNS[patternIdx];
+  if(!p.steps){ strum(chord); return; }
+  const ac=audio(), t0=ac.currentTime, hS=beatMs/2000;
+  for(let h=0;h<beats*2;h++){
+    const step=p.steps[h%p.steps.length];
+    if(step==='D') strum(chord, t0+h*hS);
+    else if(step==='U') strumUp(chord, t0+h*hS);
+  }
+}
+
+/* ---------- strum school: pick a pattern, watch it light up, copy it ---------- */
+const patRow=document.getElementById('pat-row'), patDisplay=document.getElementById('pat-display'),
+      patName=document.getElementById('pat-name'), patGo=document.getElementById('pat-go');
+let patRun=false;
+function renderPatterns(){
+  patRow.innerHTML='';
+  PATTERNS.forEach((p,i)=>{
+    const b=document.createElement('button'); b.className='pair-chip'+(i===patternIdx?' on':'');
+    b.textContent=p.label;
+    b.addEventListener('click',()=>{ if(patRun) return;
+      patternIdx=i; LB.patternIdx=i; saveLB(); renderPatterns(); });
+    patRow.appendChild(b);
+  });
+  patName.textContent=PATTERNS[patternIdx].name;
+  patDisplay.innerHTML = !PATTERNS[patternIdx].steps
+    ? '<div class="pat-slot dn">↓</div>'
+    : PATTERNS[patternIdx].steps.map(s=>
+        `<div class="pat-slot ${s==='D'?'dn':s==='U'?'up':'rest'}">${s==='D'?'↓':s==='U'?'↑':'·'}</div>`).join('');
+}
+function startPat(){
+  if(patRun){ stopPat(); return; }
+  patRun=true; patGo.textContent='⏹ Stop'; audio();
+  const p=PATTERNS[patternIdx], beatMs=820/tempoMul;   // ~73bpm — slow enough to copy
+  const slots=[...patDisplay.children];
+  const cycle=p.steps?p.steps.length:8;
+  let h=0;
+  const loop=()=>{
+    if(!patRun) return;
+    const idx=h%cycle;
+    if(p.steps){
+      slots.forEach((el,k)=>el.classList.toggle('lit',k===idx));
+      const step=p.steps[idx];
+      if(step==='D') strum(currentChord);
+      else if(step==='U') strumUp(currentChord);
+      if(idx%2===0) click(audio().currentTime, idx===0);
+    }else{
+      slots[0].classList.toggle('lit',idx===0);
+      if(idx===0) strum(currentChord);
+      if(idx%2===0) click(audio().currentTime, idx===0);
+    }
+    h++;
+    timers.push(setTimeout(loop, beatMs/2));
+  };
+  loop();
+}
+function stopPat(){
+  patRun=false; patGo.textContent='🥁 Try it!';
+  [...patDisplay.children].forEach(el=>el.classList.remove('lit'));
+}
+patGo.addEventListener('click',startPat);
+renderPatterns();
+
+/* ---------- tuner: autocorrelation pitch detect on the mic ---------- */
+const TUNE_STRINGS=[{n:'G',f:196.00},{n:'B',f:246.94},{n:'E',f:329.63}];
+const tuneStringsEl=document.getElementById('tune-strings');
+let tuneSmooth=0, tuneCooldownUntil=0;
+TUNE_STRINGS.forEach((s,i)=>{
+  const b=document.createElement('button'); b.className='pair-chip'; b.textContent=s.n;
+  b.addEventListener('click',()=>{ tuneCooldownUntil=performance.now()+1600; pluck(s.f,undefined,0.5); });
+  tuneStringsEl.appendChild(b);
+});
+function detectPitch(){
+  if(!analyser) return 0;
+  let rms=0; for(let i=0;i<micData.length;i++) rms+=micData[i]*micData[i];
+  rms=Math.sqrt(rms/micData.length);
+  if(rms<0.01) return 0;
+  const sr=audio().sampleRate, minLag=Math.floor(sr/420), maxLag=Math.ceil(sr/140);
+  let best=0,bestLag=0,e=0;
+  for(let i=0;i<micData.length;i++) e+=micData[i]*micData[i];
+  for(let lag=minLag;lag<=maxLag;lag++){
+    let c=0;
+    for(let i=0;i<micData.length-lag;i+=2) c+=micData[i]*micData[i+lag];
+    if(c>best){best=c;bestLag=lag;}
+  }
+  if(best/(e/2)<0.3||!bestLag) return 0;   // not periodic enough — noise, not a string
+  // parabolic refine: one-sample lag steps are ~13 cents at E4, too coarse for a tuner
+  const corr=lag=>{ let c=0; for(let i=0;i<micData.length-lag;i+=2) c+=micData[i]*micData[i+lag]; return c; };
+  const c0=corr(bestLag-1), c2=corr(bestLag+1), den=c0-2*best+c2;
+  const shift=den ? 0.5*(c0-c2)/den : 0;
+  return sr/(bestLag+Math.max(-1,Math.min(1,shift)));
+}
+function tunerTick(){
+  const scr=document.getElementById('tuner');
+  if(!scr.classList.contains('active')) return;
+  if(performance.now()<tuneCooldownUntil) return;   // ignore our own reference note
+  const p=detectPitch(); if(!p) return;
+  let bi=0,bc=1e9;
+  TUNE_STRINGS.forEach((s,i)=>{ const c=Math.abs(1200*Math.log2(p/s.f)); if(c<bc){bc=c;bi=i;} });
+  if(bc>120) return;                                // way off any string — probably junk
+  const cents=1200*Math.log2(p/TUNE_STRINGS[bi].f);
+  tuneSmooth=tuneSmooth*0.6+cents*0.4;
+  const deg=Math.max(-50,Math.min(50,tuneSmooth*1.2));
+  document.getElementById('needle').style.transform=`translateX(-50%) rotate(${deg}deg)`;
+  [...tuneStringsEl.children].forEach((el,i)=>el.classList.toggle('on',i===bi));
+  const good=Math.abs(tuneSmooth)<8;
+  scr.classList.toggle('good',good);
+  document.getElementById('tune-msg').textContent = good
+    ? `${TUNE_STRINGS[bi].n} — just right! ✨`
+    : tuneSmooth<0 ? `${TUNE_STRINGS[bi].n} — too low, tighten a tiny bit 🔧`
+                   : `${TUNE_STRINGS[bi].n} — too high, loosen a tiny bit 🔧`;
+}
+document.getElementById('tune-btn').addEventListener('click',()=>{
+  show('tuner');
+  if(!micOn) toggleMic(document.getElementById('tune-btn'));
+});
+document.getElementById('tuner-back').addEventListener('click',()=>show('chords'));
+
+/* ---------- save code: whole LB as base64, in and out ---------- */
+document.getElementById('code-make').addEventListener('click',()=>{
+  const el=document.getElementById('save-code');
+  el.value=btoa(JSON.stringify(LB));
+  el.focus(); el.select();
+  try{ navigator.clipboard.writeText(el.value); }catch{}
+  updateGuide('stickers', `<b>${currentBuddy().name}:</b> Code copied! Keep it somewhere safe — it is the whole band in a bottle.`);
+});
+document.getElementById('code-load').addEventListener('click',()=>{
+  const el=document.getElementById('save-code');
+  try{
+    const obj=JSON.parse(atob(el.value.trim()));
+    if(typeof obj.total!=='number'||typeof obj.done!=='object') throw 0;
+    LB=Object.assign({},LB,obj); saveLB();
+    renderSongs(); renderStickers(); refreshBar();
+    updateGuide('stickers', `<b>${currentBuddy().name}:</b> Welcome back! ⭐️ ${LB.total} stars and ${LB.animals} bandmates, safe and sound.`);
+  }catch{
+    updateGuide('stickers', `<b>${currentBuddy().name}:</b> Hmm, that code does not look right. Copy the WHOLE thing and try again.`);
+  }
+});
+
+/* ---------- tone switcher ---------- */
+const toneBtn=document.getElementById('tone-btn');
+toneBtn.textContent=TONES[toneIdx].label;
+toneBtn.addEventListener('click',()=>{
+  toneIdx=(toneIdx+1)%TONES.length;
+  toneBtn.textContent=TONES[toneIdx].label;
+  LB.toneIdx=toneIdx; saveLB();
+  strum(currentChord);   // hear the new sound right away
+});
+
 /* ---------- ear game: I strum, you tell me which chord ---------- */
 let earOn=false, earTarget=null, earStreak=0;
 const earBtn=document.getElementById('ear-btn');
@@ -1063,7 +1493,8 @@ const slotVals=['?','?','?','?'];
 slotEls.forEach((el,i)=> el.addEventListener('click',()=>{
   slotVals[i]=SLOT_ORDER[(SLOT_ORDER.indexOf(slotVals[i])+1)%SLOT_ORDER.length];
   el.textContent=slotVals[i];
-  el.style.background = CHORDS[slotVals[i]] ? CHORDS[slotVals[i]].color : 'rgba(51,48,46,.18)';
+  el.classList.toggle('set',!!CHORDS[slotVals[i]]);
+  el.style.background = CHORDS[slotVals[i]] ? CHORDS[slotVals[i]].color : '';
   if(CHORDS[slotVals[i]]) strum(slotVals[i]);
 }));
 document.getElementById('build-play').addEventListener('click',()=>{
@@ -1128,6 +1559,13 @@ const TIPS={
            'Play along with your guitar — find the pad that matches your sound.',
            'Tap the squares up top to build your OWN song. Then press play!',
            'Press 🔴 and play something — then listen to yourself. Rock star.'],
+  strum:  ['Pick a pattern and press Try it — then copy me on your guitar!',
+           'Green arrows go DOWN, blue arrows go UP. Dots mean wait.',
+           'The Campfire one is what real campfire songs use. Promise.',
+           'Whatever pattern you pick here plays in the Songs tab too!'],
+  tuner:  ['Play ONE string at a time, nice and slow. I will point at it.',
+           'Tap a letter to hear what that string SHOULD sound like.',
+           'Green means just right! If it is way off, ask a grown-up to help turn the peg.'],
   stickers:['Every sticker has a little mission. Grey ones are still waiting for you.',
             'The 🔥 ones are my favourite — play a little bit every day!',
             'Fill the whole page and you are officially a legend.'],
@@ -1151,14 +1589,15 @@ function updateGuide(id, line){
 guideEl.addEventListener('click',()=>{ guideIdx++; updateGuide(guideScreen); });
 
 /* ---------- tabs ---------- */
-const tabs={ 'tab-chords':'chords', 'tab-songs':'songs', 'tab-switch':'switch', 'tab-jam':'jam' };
+const tabs={ 'tab-chords':'chords', 'tab-songs':'songs', 'tab-switch':'switch', 'tab-strum':'strum', 'tab-jam':'jam' };
 Object.entries(tabs).forEach(([tid,sid])=>{
   document.getElementById(tid).addEventListener('click',()=>{
-    clearTimers(); stopSwitch();
+    clearTimers(); stopSwitch(); stopPat();
     document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
     document.getElementById(tid).classList.add('on'); show(sid);
   });
 });
+document.body.dataset.screen='chords';
 updateGuide('chords');
 </script>
 <script>
